@@ -1,4 +1,3 @@
----
 
 # 🌐 Connectly
 
@@ -162,3 +161,4 @@ Ensure Cloudinary credentials are correctly set in the backend `.env` file.
 * GitHub: [@rajnishkumar1906](https://github.com/rajnishkumar1906)
 
 ---
+
