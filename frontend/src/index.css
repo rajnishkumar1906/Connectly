@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+/* Lock page scroll */
+html,
+body,
+#root {
+  height: 100%;
+  overflow: hidden;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;  
+  scrollbar-width: none;    
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;             
+}
