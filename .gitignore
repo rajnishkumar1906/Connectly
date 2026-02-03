@@ -43,3 +43,8 @@ coverage/
 # Cache
 .cache/
 .parcel-cache/
+
+Revise_cloudinary_file_upload.txt
+Revise_multer.txt
+Revise_react_context.txt
+Revise_websocket.txt
