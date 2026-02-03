@@ -1,228 +1,249 @@
-import React, { useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { AppContext } from "../context/AppContext";
 
-const Home = () => {
-  const [posts, setPosts] = useState([
-    {
-      id: 1,
-      user: {
-        name: "Aarav",
-        username: "aarav",
-        avatar: "https://ui-avatars.com/api/?name=Aarav&background=EC4899&color=fff",
-      },
-      image: "https://picsum.photos/600/600?random=1",
-      caption: "Beautiful sunset at the beach 🌅",
-      likes: 0,
-      comments: 0,
-      timestamp: "2 hours ago",
-      isLiked: false,
-      isSaved: false,
-    },
-    {
-      id: 2,
-      user: {
-        name: "Ananya",
-        username: "ananya",
-        avatar: "https://ui-avatars.com/api/?name=Ananya&background=8B5CF6&color=fff",
-      },
-      image: "https://picsum.photos/600/600?random=2",
-      caption: "Coffee and code ☕💻 #developer #coding",
-      likes: 0,
-      comments: 0,
-      timestamp: "5 hours ago",
-      isLiked: true,
-      isSaved: false,
-    },
-    {
-      id: 3,
-      user: {
-        name: "Karthik",
-        username: "karthik",
-        avatar: "https://ui-avatars.com/api/?name=Karthik&background=10B981&color=fff",
-      },
-      image: "https://picsum.photos/600/600?random=3",
-      caption: "Adventure awaits! 🏔️ #hiking #nature",
-      likes: 0,
-      comments: 0,
-      timestamp: "1 day ago",
-      isLiked: false,
-      isSaved: true,
-    },
-  ]);
+/* =======================
+   Utils
+======================= */
+function formatTime(createdAt) {
+  if (!createdAt) return "";
+  const date = new Date(createdAt);
+  const now = new Date();
+  const diffMs = now - date;
 
-  const handleLike = (postId) => {
-    setPosts(
-      posts.map((post) =>
-        post.id === postId
-          ? {
-              ...post,
-              isLiked: !post.isLiked,
-              likes: post.isLiked ? post.likes - 1 : post.likes + 1,
-            }
-          : post
-      )
-    );
-  };
+  const mins = Math.floor(diffMs / 60000);
+  const hours = Math.floor(diffMs / 3600000);
+  const days = Math.floor(diffMs / 86400000);
 
-  const handleSave = (postId) => {
-    setPosts(
-      posts.map((post) =>
-        post.id === postId ? { ...post, isSaved: !post.isSaved } : post
-      )
-    );
-  };
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days < 7) return `${days}d ago`;
 
+  return date.toLocaleDateString();
+}
+
+/* =======================
+   Stories
+======================= */
+const Stories = ({ stories }) => {
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-2xl mx-auto px-4">
-
-        {/* Stories Section */}
-        <div className="bg-white border border-gray-200 rounded-xl p-4 mb-6 overflow-x-auto">
-          <div className="flex gap-4">
-            {[
-              {
-                name: "Your Story",
-                avatar: "https://ui-avatars.com/api/?name=You&background=3B82F6&color=fff",
-                isYours: true,
-              },
-              { name: "Riya", avatar: "https://ui-avatars.com/api/?name=Riya&background=F59E0B&color=fff" },
-              { name: "Kabir", avatar: "https://ui-avatars.com/api/?name=Kabir&background=EF4444&color=fff" },
-              { name: "Meera", avatar: "https://ui-avatars.com/api/?name=Meera&background=6366F1&color=fff" },
-              { name: "Zoya", avatar: "https://ui-avatars.com/api/?name=Zoya&background=14B8A6&color=fff" },
-              { name: "Arjun", avatar: "https://ui-avatars.com/api/?name=Arjun&background=8B5CF6&color=fff" },
-            ].map((story, index) => (
-              <div
-                key={index}
-                className="flex flex-col items-center gap-1 min-w-fit cursor-pointer"
-              >
-                <div
-                  className={`w-16 h-16 rounded-full p-0.5 ${
-                    story.isYours
-                      ? "bg-gray-300"
-                      : "bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-500"
-                  }`}
-                >
-                  <div className="w-full h-full rounded-full border-2 border-white overflow-hidden">
-                    <img
-                      src={story.avatar}
-                      alt={story.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                </div>
-                <span className="text-xs text-gray-600 truncate max-w-[64px]">
-                  {story.name}
-                </span>
-              </div>
-            ))}
+    <div className="bg-white border border-gray-200 rounded-xl mb-6 p-4">
+      <div className="flex gap-4 overflow-x-auto scrollbar-hide">
+        {stories.map((story) => (
+          <div
+            key={story.id}
+            className="flex flex-col items-center min-w-[70px]"
+          >
+            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-pink-500 to-yellow-400 p-[2px]">
+              <img
+                src={story.avatar}
+                alt={story.username}
+                className="w-full h-full rounded-full object-cover border-2 border-white"
+              />
+            </div>
+            <p className="text-xs mt-1 text-gray-700 truncate w-16 text-center">
+              {story.username}
+            </p>
           </div>
-        </div>
-
-        {/* Posts Feed */}
-        <div className="space-y-6">
-          {posts.map((post) => (
-            <Post
-              key={post.id}
-              post={post}
-              onLike={handleLike}
-              onSave={handleSave}
-            />
-          ))}
-        </div>
+        ))}
       </div>
     </div>
   );
 };
 
-// Post Component
-const Post = ({ post, onLike, onSave }) => {
-  const [comment, setComment] = useState("");
+/* =======================
+   Post
+======================= */
+const Post = ({ post, onLike, onComment, getComments }) => {
+  const [commentText, setCommentText] = useState("");
+  const [commentsOpen, setCommentsOpen] = useState(false);
+  const [comments, setComments] = useState([]);
+  const [loadingComments, setLoadingComments] = useState(false);
 
-  const handleCommentSubmit = (e) => {
+  const user = post.user || {};
+  const avatar =
+    user.avatar ||
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(
+      user.username || "U"
+    )}&background=3B82F6&color=fff`;
+
+  const commentCount = post.commentCount ?? post.comments?.length ?? 0;
+
+  const loadComments = async () => {
+    if (comments.length > 0) {
+      setCommentsOpen(!commentsOpen);
+      return;
+    }
+    setLoadingComments(true);
+    const list = await getComments(post._id);
+    setComments(list || []);
+    setCommentsOpen(true);
+    setLoadingComments(false);
+  };
+
+  const submitComment = async (e) => {
     e.preventDefault();
-    if (comment.trim()) {
-      console.log("Comment:", comment);
-      setComment("");
+    if (!commentText.trim()) return;
+
+    const res = await onComment(post._id, commentText.trim());
+    if (res?.success) {
+      setComments((prev) => [...prev, res.comment]);
+      setCommentText("");
     }
   };
 
   return (
     <article className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-      {/* Post Header */}
-      <div className="flex items-center justify-between p-4">
-        <div className="flex items-center gap-3">
+      {/* Header */}
+      <div className="flex items-center gap-3 p-4">
+        <Link to={`/profile/${user._id}`} className="flex items-center gap-3">
           <img
-            src={post.user.avatar}
-            alt={post.user.name}
-            className="w-10 h-10 rounded-full"
+            src={avatar}
+            alt={user.username}
+            className="w-10 h-10 rounded-full object-cover"
           />
           <div>
-            <h3 className="font-semibold text-sm text-gray-900">
-              {post.user.username}
-            </h3>
-            <p className="text-xs text-gray-500">{post.timestamp}</p>
+            <p className="font-semibold text-sm">{user.username}</p>
+            <p className="text-xs text-gray-500">
+              {formatTime(post.createdAt)}
+            </p>
           </div>
-        </div>
-        <button className="text-gray-600 hover:text-gray-900 text-xl">
-          •••
-        </button>
+        </Link>
       </div>
 
-      {/* Post Image */}
+      {/* Image */}
       <img
-        src={post.image}
+        src={post.imageUrl}
         alt="Post"
-        className="w-full aspect-square object-cover"
+        className="w-full aspect-square object-cover bg-gray-100"
       />
 
-      {/* Post Actions */}
+      {/* Actions */}
       <div className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-4">
-            <button onClick={() => onLike(post.id)}>
-              {post.isLiked ? "❤️" : "🤍"}
-            </button>
-            <button>💬</button>
-            <button>📤</button>
-          </div>
-          <button onClick={() => onSave(post.id)}>
-            {post.isSaved ? "🔖" : "📑"}
+        <div className="flex gap-4 mb-2">
+          <button onClick={() => onLike(post._id)}>
+            {post.isLiked ? "❤️" : "🤍"}
           </button>
+          <button onClick={loadComments}>💬</button>
         </div>
 
-        <p className="font-semibold text-sm mb-2">
-          {post.likes.toLocaleString()} likes
+        <p className="font-semibold text-sm mb-1">
+          {(post.likeCount ?? 0).toLocaleString()} likes
         </p>
 
-        <div className="text-sm mb-2">
-          <span className="font-semibold mr-2">{post.user.username}</span>
-          <span className="text-gray-700">{post.caption}</span>
-        </div>
+        <p className="text-sm mb-2">
+          <span className="font-semibold mr-2">{user.username}</span>
+          {post.caption}
+        </p>
 
-        {post.comments > 0 && (
-          <button className="text-sm text-gray-500 mb-2">
-            View all {post.comments} comments
+        {commentCount > 0 && (
+          <button
+            onClick={loadComments}
+            className="text-sm text-gray-500 mb-2"
+          >
+            {loadingComments
+              ? "Loading..."
+              : `View all ${commentCount} comments`}
           </button>
         )}
 
+        {commentsOpen && (
+          <ul className="space-y-1 text-sm mb-2">
+            {comments.slice(-5).map((c) => (
+              <li key={c._id}>
+                <span className="font-semibold mr-2">
+                  {c.user?.username}
+                </span>
+                {c.text}
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {/* Add comment */}
         <form
-          onSubmit={handleCommentSubmit}
-          className="flex items-center gap-2 pt-2 border-t border-gray-100"
+          onSubmit={submitComment}
+          className="flex gap-2 border-t pt-2"
         >
           <input
             type="text"
             placeholder="Add a comment..."
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            className="flex-1 text-sm outline-none bg-transparent"
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
+            className="flex-1 text-sm outline-none"
           />
-          {comment.trim() && (
-            <button className="text-sm font-semibold text-blue-600">
+          {commentText.trim() && (
+            <button className="text-blue-600 font-semibold text-sm">
               Post
             </button>
           )}
         </form>
       </div>
     </article>
+  );
+};
+
+/* =======================
+   Home
+======================= */
+const Home = () => {
+  const { feed, fetchFeed, likePost, addComment, getComments } =
+    useContext(AppContext);
+
+  const [loading, setLoading] = useState(true);
+
+  const stories = [
+    { id: 1, username: "Rajnish", avatar: "https://ui-avatars.com/api/?name=R" },
+    { id: 2, username: "Prince", avatar: "https://ui-avatars.com/api/?name=P" },
+    { id: 3, username: "Albert", avatar: "https://ui-avatars.com/api/?name=A" },
+    { id: 4, username: "Bhagat", avatar: "https://ui-avatars.com/api/?name=B" },
+    { id: 5, username: "Vivek", avatar: "https://ui-avatars.com/api/?name=V" },
+  ];
+
+  useEffect(() => {
+    const loadFeed = async () => {
+      setLoading(true);
+      await fetchFeed();
+      setLoading(false);
+    };
+    loadFeed();
+  }, [fetchFeed]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-500">Loading feed...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-6 overflow-y-auto">
+      <div className="max-w-2xl mx-auto px-4">
+        {/* Stories */}
+        <Stories stories={stories} />
+
+        {/* Feed */}
+        {feed.length === 0 ? (
+          <div className="bg-white border rounded-xl p-8 text-center">
+            <p className="text-gray-500">No posts yet.</p>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {feed.map((post) => (
+              <Post
+                key={post._id}
+                post={post}
+                onLike={likePost}
+                onComment={addComment}
+                getComments={getComments}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 

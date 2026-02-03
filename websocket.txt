@@ -1,0 +1,289 @@
+========================================================
+WEBSOCKET FUNDAMENTALS – COMPLETE NOTES (STEP-WISE)
+========================================================
+
+--------------------------------------------------------
+1. WHAT IS A WEBSOCKET?
+--------------------------------------------------------
+WebSocket is a protocol that provides a persistent,
+full-duplex communication channel between a client
+and a server over a single TCP connection.
+
+Key properties:
+- Persistent connection (stays open)
+- Full-duplex (both sides send anytime)
+- Low latency
+- Event-driven communication
+
+Analogy:
+HTTP = letters
+WebSocket = phone call
+
+
+--------------------------------------------------------
+2. WHY WEBSOCKET CAME INTO PICTURE
+--------------------------------------------------------
+Traditional HTTP works as:
+Client → Request
+Server → Response
+Connection closes
+
+Problems with HTTP for real-time apps:
+1. Server cannot push data on its own
+2. Polling wastes bandwidth & CPU
+3. High latency for live features
+4. Poor user experience for chat/notifications
+
+Polling example problem:
+1000 users polling every second =
+1000 useless requests per second
+
+WebSocket was introduced to solve:
+- Server push
+- Real-time communication
+- Persistent connectivity
+
+
+--------------------------------------------------------
+3. WHAT WEB SOCKET CHANGES
+--------------------------------------------------------
+Before:
+Server responds only when client asks
+
+After:
+Server and client can talk anytime
+
+Once connected:
+- No repeated requests
+- No reconnect per message
+- Server can push events instantly
+
+
+--------------------------------------------------------
+4. HOW WEBSOCKET WORKS (INTERNAL FLOW)
+--------------------------------------------------------
+Step 1: HTTP Handshake
+Client sends HTTP request with:
+Upgrade: websocket
+
+Server responds:
+101 Switching Protocols
+
+Step 2: Protocol upgrade
+- HTTP is dropped
+- WebSocket protocol takes over
+- TCP connection stays open
+
+Step 3: Persistent communication
+- Messages sent as small frames
+- No request/response pattern
+
+
+--------------------------------------------------------
+5. WHY WEBSOCKET IS PERFECT FOR SOCIAL MEDIA
+--------------------------------------------------------
+
+LIVE CHAT
+- Instant message delivery
+- Bidirectional communication
+
+TYPING INDICATORS
+- Frequent, tiny messages
+- Should not hit database
+- Needs low latency
+
+ONLINE / OFFLINE STATUS
+- Connection open = online
+- Connection closed = offline
+- No extra API calls needed
+
+NOTIFICATIONS
+- Likes, comments, mentions
+- Server pushes instantly
+
+LIVE FEED UPDATES
+- Like count updates
+- Comment count updates
+- Real-time engagement
+
+VOICE / VIDEO SIGNALING (later)
+- WebSocket used for signaling
+- Actual media uses WebRTC
+
+
+--------------------------------------------------------
+6. WHY NOT USE WEBSOCKET FOR EVERYTHING?
+--------------------------------------------------------
+WebSocket is NOT good for:
+- CRUD APIs
+- File uploads
+- Large payloads
+- Cacheable data
+
+Best practice (Hybrid approach):
+
+HTTP:
+- Login
+- Signup
+- Fetch profile
+- Upload images
+
+WebSocket:
+- Chat
+- Notifications
+- Typing indicators
+- Presence
+- Live updates
+
+
+--------------------------------------------------------
+7. IMPORTANT WEBSOCKET PROPERTIES
+--------------------------------------------------------
+- Stateful (connection has identity)
+- Event-based (not resource-based)
+- Low overhead
+- Persistent
+- Needs connection management
+
+Secure version:
+wss:// (WebSocket over TLS)
+
+
+--------------------------------------------------------
+8. COMMON MISCONCEPTIONS
+--------------------------------------------------------
+❌ Each user gets their own server
+✅ One server handles thousands of sockets
+
+❌ WebSocket replaces REST
+✅ WebSocket complements REST
+
+❌ WebSocket is insecure
+✅ wss:// is secure
+
+❌ Connection = thread
+✅ Connection = non-blocking socket
+
+
+--------------------------------------------------------
+9. SOCKET.IO (WHAT WE USED)
+--------------------------------------------------------
+Socket.IO is built on top of WebSocket.
+
+It adds:
+- Auto reconnection
+- Heartbeats
+- Event system
+- Rooms & namespaces
+- Better reliability
+
+For learning + social media apps:
+Socket.IO is a good choice.
+
+
+--------------------------------------------------------
+10. BACKEND ARCHITECTURE WITH WEBSOCKET
+--------------------------------------------------------
+Structure used:
+
+Express app → HTTP logic
+HTTP server → TCP handling
+Socket.IO → WebSocket handling
+
+One server handles:
+- REST APIs
+- WebSocket connections
+- Same port
+
+
+--------------------------------------------------------
+11. WHY http.createServer(app) IS REQUIRED
+--------------------------------------------------------
+WebSocket upgrades happen at the HTTP server level,
+not at Express middleware level.
+
+Therefore:
+- app.listen() ❌
+- server.listen() ✅
+
+
+--------------------------------------------------------
+12. SOCKET CONNECTION LIFECYCLE
+--------------------------------------------------------
+io.on("connection", socket)
+
+This runs when:
+- Client connects via WebSocket
+
+socket.id:
+- Unique per connection
+- Changes on reconnect
+- NOT same as userId
+
+socket.on("disconnect"):
+- User closes tab
+- Network drops
+- App refreshes
+
+Used for:
+- Online/offline tracking
+- Presence
+- Cleanup
+
+
+--------------------------------------------------------
+13. HOW ONE SERVER HANDLES THOUSANDS OF USERS
+--------------------------------------------------------
+Node.js uses:
+- Single thread
+- Event loop
+- Non-blocking I/O
+
+Sockets:
+- Are idle most of the time
+- Do not block CPU
+- OS handles low-level I/O
+
+Events are processed:
+- One at a time
+- Very fast
+- No thread per user
+
+This makes WebSocket scalable.
+
+
+--------------------------------------------------------
+14. WHAT BREAKS WEBSOCKET SERVERS
+--------------------------------------------------------
+- Blocking code
+- Heavy CPU work inside socket events
+- Large payloads
+- Memory leaks (not cleaning socket maps)
+
+Good practice:
+- Keep socket handlers small
+- Delegate heavy work to workers/queues
+
+
+--------------------------------------------------------
+15. CURRENT LEARNING STATUS
+--------------------------------------------------------
+You now understand:
+- What WebSocket is
+- Why it exists
+- Why HTTP is insufficient
+- How persistent connections work
+- How one server scales
+- How this fits social media apps
+
+Next logical topics:
+- WebSocket authentication (JWT)
+- Mapping userId → socket
+- Message routing
+- Chat persistence
+- Scaling with Redis
+
+
+--------------------------------------------------------
+END OF FILE
+--------------------------------------------------------

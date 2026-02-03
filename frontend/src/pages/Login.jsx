@@ -1,11 +1,15 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
+import { AppContext } from "../context/AppContext.jsx";
 
 const Login = () => {
+  const { login, signup, loading, error } = useContext(AppContext);
+
   const [isSignUp, setIsSignUp] = useState(false);
   const [formData, setFormData] = useState({
-    email: "",
     username: "",
-    fullName: "",
+    firstname: "",
+    lastname: "",
+    email: "",
     password: "",
   });
 
@@ -14,22 +18,28 @@ const Login = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form submitted:", formData);
+
+    try {
+      if (isSignUp) {
+        await signup(formData);
+        setIsSignUp(false);
+      } else {
+        await login(formData.email, formData.password);
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-sky-50 to-pink-50 flex items-center justify-center px-4">
       <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
 
-        {/* LEFT – BRANDING */}
+        {/* LEFT SIDE */}
         <div className="hidden lg:flex flex-col justify-center">
-          <img
-            src="/connectly.svg"
-            alt="Connectly"
-            className="h-20 w-auto mb-6"
-          />
+          <img src="/connectly.svg" alt="Connectly" className="h-20 w-auto mb-6" />
 
           <h2 className="text-3xl font-semibold text-gray-800 mb-3">
             Connect with people who matter
@@ -46,14 +56,9 @@ const Login = () => {
           </div>
         </div>
 
-        {/* RIGHT – AUTH CARD */}
+        {/* RIGHT SIDE */}
         <div className="flex justify-center">
           <div className="w-full max-w-md bg-white rounded-2xl shadow-xl px-8 py-10">
-
-            {/* Mobile logo */}
-            <div className="lg:hidden flex justify-center mb-6">
-              <img src="/connectly.svg" alt="Connectly" className="h-14" />
-            </div>
 
             <h1 className="text-2xl font-bold text-gray-900 text-center mb-1">
               {isSignUp ? "Create account" : "Welcome back"}
@@ -65,21 +70,18 @@ const Login = () => {
                 : "Log in to continue to Connectly"}
             </p>
 
+            {error && (
+              <p className="text-red-500 text-sm text-center mb-4">
+                {error}
+              </p>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-4">
               {isSignUp && (
                 <>
-                  <Input
-                    name="fullName"
-                    placeholder="Full name"
-                    value={formData.fullName}
-                    onChange={handleChange}
-                  />
-                  <Input
-                    name="username"
-                    placeholder="Username"
-                    value={formData.username}
-                    onChange={handleChange}
-                  />
+                  <Input name="username" placeholder="Username" value={formData.username} onChange={handleChange} />
+                  <Input name="firstname" placeholder="First name" value={formData.firstname} onChange={handleChange} />
+                  <Input name="lastname" placeholder="Last name" value={formData.lastname} onChange={handleChange} />
                 </>
               )}
 
@@ -99,32 +101,16 @@ const Login = () => {
                 onChange={handleChange}
               />
 
-              {!isSignUp && (
-                <div className="flex justify-between text-sm text-gray-600">
-                  <label className="flex items-center gap-2">
-                    <input type="checkbox" className="rounded" />
-                    Remember me
-                  </label>
-                  <button type="button" className="text-blue-600 hover:underline">
-                    Forgot password?
-                  </button>
-                </div>
-              )}
-
               <button
                 type="submit"
-                className="w-full py-3 rounded-lg font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition"
+                disabled={loading}
+                className="w-full py-3 rounded-lg font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition disabled:opacity-50"
               >
-                {isSignUp ? "Sign up" : "Log in"}
+                {loading ? "Please wait..." : isSignUp ? "Sign up" : "Log in"}
               </button>
             </form>
 
-            {/* Divider */}
             <Divider />
-
-            {/* Social buttons */}
-            <SocialButton provider="Google" />
-            <SocialButton provider="Facebook" />
 
             <p className="mt-6 text-center text-gray-600">
               {isSignUp ? "Already have an account?" : "New to Connectly?"}{" "}
@@ -135,6 +121,7 @@ const Login = () => {
                 {isSignUp ? "Log in" : "Sign up"}
               </button>
             </p>
+
           </div>
         </div>
       </div>
@@ -142,12 +129,10 @@ const Login = () => {
   );
 };
 
-/* ---------- Small UI components ---------- */
-
 const Input = (props) => (
   <input
     {...props}
-    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
     required
   />
 );
@@ -171,12 +156,6 @@ const Divider = () => (
       OR
     </span>
   </div>
-);
-
-const SocialButton = ({ provider }) => (
-  <button className="w-full py-3 border rounded-lg text-gray-700 hover:bg-gray-50 transition mb-3">
-    Continue with {provider}
-  </button>
 );
 
 export default Login;

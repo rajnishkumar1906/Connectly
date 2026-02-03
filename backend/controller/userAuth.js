@@ -47,11 +47,11 @@ export const signUp = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({
+    console.log(error);
+    return res.status(500).json({
       status: "Failed",
       message: error.message
     });
-    console.log(error)
   }
 };
 
@@ -112,6 +112,21 @@ export const login = async (req, res) => {
     res.status(500).json({
       message: error.message
     });
+  }
+};
+
+/** Get current user from JWT (for auth check on load) */
+export const getMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId)
+      .select("_id username email")
+      .lean();
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json({ user: { _id: user._id, username: user.username, email: user.email } });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
 
