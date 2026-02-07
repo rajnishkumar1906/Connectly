@@ -1,56 +1,59 @@
 import { Router } from "express";
+import { authMiddleware } from "../middleware/authMiddleware.js";
+
+/* AUTH */
 import {
-  signUp,
   login,
+  signUp,
   logout,
   getMe,
-  showUsers,
-  deleteUser,
 } from "../controller/userAuth.js";
+
+/* PROFILE */
 import {
-  retrieveProfileData,
-  updateProfile,
-  getUserById,
+  getOwnProfile,
   getProfileByUserId,
+  updateProfile,
 } from "../controller/userController.js";
+
+/* FOLLOW */
 import {
   followUser,
   unfollowUser,
-  getFollowing,
-  getFollowers,
   checkFollow,
+  getUserFollowers,
+  getUserFollowing,
 } from "../controller/followController.js";
-import { getRecommendedUsers } from "../controller/recommends.js";
-import { authMiddleware } from "../middleware/authMiddleware.js";
 
-const userRouter = Router();
+/* RECOMMEND */
+import { getRecommendedUsers } from "../controller/recommendsController.js";
 
-// PUBLIC
-userRouter.post("/signup", signUp);
-userRouter.post("/login", login);
+const router = Router();
 
-// PROTECTED - specific paths first (before /:userId)
-userRouter.get("/me", authMiddleware, getMe);
-userRouter.post("/logout", authMiddleware, logout);
-userRouter.get("/show-users", authMiddleware, showUsers);
-userRouter.delete("/delete-user", authMiddleware, deleteUser);
-userRouter.patch("/update-profile", authMiddleware, updateProfile);
-userRouter.get("/retrieve-profile", authMiddleware, retrieveProfileData);
-userRouter.get("/recommended/list", authMiddleware, getRecommendedUsers);
-userRouter.post("/follow/:userId", authMiddleware, followUser);
-userRouter.delete("/unfollow/:userId", authMiddleware, unfollowUser);
-userRouter.get("/check-follow/:userId", authMiddleware, checkFollow);
-userRouter.get("/following", authMiddleware, (req, res, next) => {
-  req.params.userId = req.user.userId;
-  next();
-}, getFollowing);
-userRouter.get("/following/:userId", authMiddleware, getFollowing);
-userRouter.get("/followers", authMiddleware, (req, res, next) => {
-  req.params.userId = req.user.userId;
-  next();
-}, getFollowers);
-userRouter.get("/followers/:userId", authMiddleware, getFollowers);
-userRouter.get("/:userId/profile", authMiddleware, getProfileByUserId);
-userRouter.get("/:userId", getUserById); // public user info (must be last)
+/* ================= AUTH ================= */
+router.get("/me", authMiddleware, getMe);
+router.post("/login", login);
+router.post("/signup", signUp);
+router.post("/logout", authMiddleware, logout);
 
-export default userRouter;
+/* ================= PROFILE ================= */
+router.get("/retrieve-profile", authMiddleware, getOwnProfile);
+router.get("/:userId/profile", getProfileByUserId);
+router.patch("/update-profile", authMiddleware, updateProfile);
+
+/* ================= FOLLOW ================= */
+router.post("/follow/:userId", authMiddleware, followUser);
+router.delete("/unfollow/:userId", authMiddleware, unfollowUser);
+router.get("/check-follow/:userId", authMiddleware, checkFollow);
+
+/* ================= FOLLOWERS / FOLLOWING ================= */
+router.get("/followers", authMiddleware, getUserFollowers);
+router.get("/followers/:userId", authMiddleware, getUserFollowers);
+
+router.get("/following", authMiddleware, getUserFollowing);
+router.get("/following/:userId", authMiddleware, getUserFollowing);
+
+/* ================= RECOMMENDED ================= */
+router.get("/recommended/list", authMiddleware, getRecommendedUsers);
+
+export default router;

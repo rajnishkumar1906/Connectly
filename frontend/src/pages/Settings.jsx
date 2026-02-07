@@ -1,5 +1,9 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { ChevronLeft, Shield, Bell, UserCog } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
+import Switch from "../components/ui/Switch";
+import Button from "../components/ui/Button";
 
 const Settings = () => {
   const [notifications, setNotifications] = useState({
@@ -27,169 +31,206 @@ const Settings = () => {
   const handleSave = (e) => {
     e.preventDefault();
     console.log("Settings saved:", { notifications, privacy });
+    // Here you would typically call an API to save settings
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto p-8">
+  // Helper component for settings row
+  const SettingRow = ({ label, description, children }) => (
+    <div className="flex items-center justify-between py-4">
+      <div className="flex-1 pr-4">
+        <h4 className="text-sm font-medium text-gray-900">{label}</h4>
+        <p className="text-sm text-gray-500 mt-1">{description}</p>
+      </div>
+      <div className="flex-shrink-0">
+        {children}
+      </div>
+    </div>
+  );
 
+  return (
+    <div className="w-full pb-8">
+      <div className="max-w-3xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
           <Link
             to="/profile"
-            className="text-2xl text-gray-600 hover:text-gray-900"
+            className="p-2 -ml-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors"
           >
-            ←
+            <ChevronLeft size={24} />
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Settings
+          </h1>
         </div>
 
         <form onSubmit={handleSave} className="space-y-6">
-
           {/* Notifications */}
-          <Section title="Notifications">
-            <Toggle
-              label="Likes"
-              description="Notify when someone likes your post"
-              checked={notifications.likes}
-              onChange={() => toggleNotification("likes")}
-            />
-            <Toggle
-              label="Comments"
-              description="Notify when someone comments"
-              checked={notifications.comments}
-              onChange={() => toggleNotification("comments")}
-            />
-            <Toggle
-              label="New Followers"
-              description="Notify when someone follows you"
-              checked={notifications.follows}
-              onChange={() => toggleNotification("follows")}
-            />
-            <Toggle
-              label="Messages"
-              description="Notify about new messages"
-              checked={notifications.messages}
-              onChange={() => toggleNotification("messages")}
-            />
-            <Toggle
-              label="Email Updates"
-              description="Receive weekly email summary"
-              checked={notifications.emailUpdates}
-              onChange={() => toggleNotification("emailUpdates")}
-            />
-          </Section>
+          <Card>
+            <CardHeader className="flex flex-row items-center gap-3">
+              <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
+                <Bell size={20} />
+              </div>
+              <CardTitle>Notifications</CardTitle>
+            </CardHeader>
+            <CardContent className="divide-y divide-gray-100">
+              <SettingRow
+                label="Likes"
+                description="Notify when someone likes your post"
+              >
+                <Switch
+                  checked={notifications.likes}
+                  onChange={() => toggleNotification("likes")}
+                />
+              </SettingRow>
+              <SettingRow
+                label="Comments"
+                description="Notify when someone comments on your posts"
+              >
+                <Switch
+                  checked={notifications.comments}
+                  onChange={() => toggleNotification("comments")}
+                />
+              </SettingRow>
+              <SettingRow
+                label="New Followers"
+                description="Notify when someone starts following you"
+              >
+                <Switch
+                  checked={notifications.follows}
+                  onChange={() => toggleNotification("follows")}
+                />
+              </SettingRow>
+              <SettingRow
+                label="Messages"
+                description="Notify about new direct messages"
+              >
+                <Switch
+                  checked={notifications.messages}
+                  onChange={() => toggleNotification("messages")}
+                />
+              </SettingRow>
+              <SettingRow
+                label="Email Updates"
+                description="Receive weekly digest of activity"
+              >
+                <Switch
+                  checked={notifications.emailUpdates}
+                  onChange={() => toggleNotification("emailUpdates")}
+                />
+              </SettingRow>
+            </CardContent>
+          </Card>
 
-          {/* Privacy & Security */}
-          <Section title="Privacy & Security">
-            <Toggle
-              label="Private Account"
-              description="Only approved followers can see your posts"
-              checked={privacy.privateAccount}
-              onChange={() => togglePrivacy("privateAccount")}
-            />
-            <Toggle
-              label="Activity Status"
-              description="Show when you're active"
-              checked={privacy.activityStatus}
-              onChange={() => togglePrivacy("activityStatus")}
-            />
-            <Toggle
-              label="Story Sharing"
-              description="Allow others to share your stories"
-              checked={privacy.storySharing}
-              onChange={() => togglePrivacy("storySharing")}
-            />
+          {/* Privacy */}
+          <Card>
+            <CardHeader className="flex flex-row items-center gap-3">
+              <div className="p-2 bg-green-50 rounded-lg text-green-600">
+                <Shield size={20} />
+              </div>
+              <CardTitle>Privacy & Security</CardTitle>
+            </CardHeader>
+            <CardContent className="divide-y divide-gray-100">
+              <SettingRow
+                label="Private Account"
+                description="Only approved followers can see your posts"
+              >
+                <Switch
+                  checked={privacy.privateAccount}
+                  onChange={() => togglePrivacy("privateAccount")}
+                />
+              </SettingRow>
+              <SettingRow
+                label="Activity Status"
+                description="Show when you're active on the platform"
+              >
+                <Switch
+                  checked={privacy.activityStatus}
+                  onChange={() => togglePrivacy("activityStatus")}
+                />
+              </SettingRow>
+              <SettingRow
+                label="Story Sharing"
+                description="Allow others to share your stories"
+              >
+                <Switch
+                  checked={privacy.storySharing}
+                  onChange={() => togglePrivacy("storySharing")}
+                />
+              </SettingRow>
+              
+              <div className="py-4">
+                <Button 
+                  variant="outline" 
+                  onClick={() => console.log("Change password")}
+                  className="w-full sm:w-auto"
+                >
+                  Change Password
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
 
-            <button
-              type="button"
-              className="text-blue-600 hover:text-blue-700 font-medium text-sm mt-4"
-            >
-              Change Password
-            </button>
-          </Section>
+          {/* Account */}
+          <Card>
+            <CardHeader className="flex flex-row items-center gap-3">
+              <div className="p-2 bg-purple-50 rounded-lg text-purple-600">
+                <UserCog size={20} />
+              </div>
+              <CardTitle>Account Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between py-2">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900">Download Your Data</h4>
+                  <p className="text-sm text-gray-500">Request a copy of your information</p>
+                </div>
+                <Button variant="outline" size="sm">
+                  Request
+                </Button>
+              </div>
+              
+              <div className="flex items-center justify-between py-2">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900">Temporarily Disable</h4>
+                  <p className="text-sm text-gray-500">Take a break from the platform</p>
+                </div>
+                <Button variant="outline" size="sm" className="text-amber-600 hover:text-amber-700 hover:bg-amber-50 border-amber-200">
+                  Disable
+                </Button>
+              </div>
 
-          {/* Account Actions */}
-          <Section title="Account Actions">
-            <ActionButton
-              title="Download Your Data"
-              description="Request a copy of your information"
-            />
-            <ActionButton
-              title="Temporarily Disable Account"
-              description="Take a break from the platform"
-            />
-            <ActionButton
-              title="Delete Account"
-              description="Permanently delete your account"
-              danger
-            />
-          </Section>
+              <div className="flex items-center justify-between py-2">
+                <div>
+                  <h4 className="text-sm font-medium text-red-600">Delete Account</h4>
+                  <p className="text-sm text-gray-500">Permanently delete your account</p>
+                </div>
+                <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200">
+                  Delete
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
 
-          {/* Save */}
-          <div className="flex gap-4">
-            <button
+          {/* Save Actions */}
+          <div className="flex gap-4 pt-4">
+            <Button
               type="submit"
-              className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              variant="gradient"
+              className="px-8"
             >
               Save Changes
-            </button>
-            <Link
-              to="/profile"
-              className="px-8 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium text-center"
-            >
-              Cancel
+            </Button>
+
+            <Link to="/profile">
+              <Button variant="secondary" className="px-8">
+                Cancel
+              </Button>
             </Link>
           </div>
-
         </form>
       </div>
     </div>
   );
 };
-
-
-const Section = ({ title, children }) => (
-  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-    <h2 className="text-xl font-semibold text-gray-900 mb-6">
-      {title}
-    </h2>
-    <div className="space-y-4">{children}</div>
-  </div>
-);
-
-const Toggle = ({ label, description, checked, onChange }) => (
-  <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
-    <div>
-      <h3 className="font-medium text-gray-900">{label}</h3>
-      <p className="text-sm text-gray-600">{description}</p>
-    </div>
-    <label className="relative inline-flex items-center cursor-pointer">
-      <input
-        type="checkbox"
-        className="sr-only peer"
-        checked={checked}
-        onChange={onChange}
-      />
-      <div className="w-11 h-6 bg-gray-200 peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:h-5 after:w-5 after:rounded-full after:transition-all peer-checked:after:translate-x-full"></div>
-    </label>
-  </div>
-);
-
-const ActionButton = ({ title, description, danger }) => (
-  <button
-    type="button"
-    className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${
-      danger
-        ? "text-red-600 hover:bg-red-50"
-        : "text-gray-700 hover:bg-gray-50"
-    }`}
-  >
-    <div className="font-medium">{title}</div>
-    <div className={`text-sm ${danger ? "text-red-500" : "text-gray-500"}`}>
-      {description}
-    </div>
-  </button>
-);
 
 export default Settings;

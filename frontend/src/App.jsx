@@ -1,78 +1,84 @@
-import React, { useContext } from "react";
-import { Routes, Route } from "react-router-dom";
+import React, { useState, useEffect, useContext } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
 import MainLayout from "./MainLayout";
+import Home from "./pages/Home";
+import Discover from "./pages/Discover";
 import Login from "./pages/Login";
 import Messages from "./pages/Messages";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import { AppContext } from "./context/AppContext";
+import { ToastContainer } from "react-toastify";
+import SplashScreen from "./components/SplashScreen";
+import "react-toastify/dist/ReactToastify.css";
+import Notification from "./pages/Notifications";
 
+/* ================= PROTECTED ROUTE ================= */
 function ProtectedRoute({ children }) {
-  const { isAuthorised } = useContext(AppContext);
+  const { isAuthorised, loading } = useContext(AppContext);
+
+  // Optional: prevent flicker while checking auth
+  if (loading) return null;
 
   if (!isAuthorised) {
-    return <Login />;   // logic-based protection
+    return <Navigate to="/login" replace />;
   }
 
   return children;
 }
 
+/* ================= APP ================= */
 function App() {
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (showSplash) {
+    return <SplashScreen />;
+  }
+
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
+    <>
+      {/* 🔔 Global toast infrastructure (ONCE) */}
+      <ToastContainer position="top-right" autoClose={2000} />
 
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <MainLayout />
-          </ProtectedRoute>
-        }
-      />
+      <Routes>
+        {/* Public */}
+        <Route path="/login" element={<Login />} />
 
-      <Route
-        path="/messages"
-        element={
-          <ProtectedRoute>
-            <Messages />
-          </ProtectedRoute>
-        }
-      />
+        {/* Protected layout with nested routes */}
+        <Route
+          element={
+            <ProtectedRoute>
+              <MainLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="/" element={<Home />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/profile/:userId" element={<Profile />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/discover" element={<Discover />} />
 
-      <Route
-        path="/profile"
-        element={
-          <ProtectedRoute>
-            <Profile />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/profile/:userId"
-        element={
-          <ProtectedRoute>
-            <Profile />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/settings"
-        element={
-          <ProtectedRoute>
-            <Settings />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/discover"
-        element={
-          <ProtectedRoute>
-            <MainLayout />
-          </ProtectedRoute>
-        }
-      />
-    </Routes>
+          <Route path="/notifications" element={<Notification/>} />
+        </Route>
+
+        {/* Messages (Separate layout if needed, or move into MainLayout if desired) */}
+        <Route
+          path="/messages"
+          element={
+            <ProtectedRoute>
+              <Messages />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </>
   );
 }
 

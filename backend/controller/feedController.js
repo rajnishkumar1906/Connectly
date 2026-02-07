@@ -1,58 +1,112 @@
 import fs from "fs/promises";
 import { uploadImage } from "../utils/cloudinary.js";
-import { Post } from "../models/Schemas.js";
-import { Follow } from "../models/Schemas.js";
+import { Post, Follow } from "../models/Schemas.js";
 
-/* ================= CREATE POST (upload image + save to DB) ================= */
+/* ================= CREATE POST ================= */
 export const createPost = async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ message: "No file uploaded" });
+    let imageUrl = "";
+
+    if (req.file) {
+      const result = await uploadImage(req.file.path);
+      await fs.unlink(req.file.path).catch(() => {});
+      imageUrl = result.secure_url;
     }
 
-    const result = await uploadImage(req.file.path);
-    await fs.unlink(req.file.path).catch(() => {});
-
     const caption = req.body.caption || "";
+
+    if (!imageUrl && !caption.trim()) {
+      return res
+        .status(400)
+        .json({ message: "Post must contain either an image or text" });
+    }
+
     const post = await Post.create({
       user: req.user.userId,
-      imageUrl: result.secure_url,
+      imageUrl,
       caption,
     });
 
-    const populated = await Post.findById(post._id).populate("user", "username");
+    const populated = await Post.findById(post._id).populate(
+      "user",
+      "username"
+    );
+
     return res.status(201).json({
       message: "Post created successfully",
       post: {
         _id: populated._id,
         caption: populated.caption,
         imageUrl: populated.imageUrl,
+        createdAt: populated.createdAt,
+        likeCount: 0,
+        commentCount: 0,
+        isLiked: false,
         user: {
           _id: populated.user._id,
           username: populated.user.username,
+          avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(
+            populated.user.username || "U"
+          )}&background=3B82F6&color=fff`,
         },
-        likes: [],
-        comments: [],
-        createdAt: populated.createdAt,
       },
     });
   } catch (error) {
     if (req.file?.path) {
       await fs.unlink(req.file.path).catch(() => {});
     }
+
     console.error(error);
-    return res.status(500).json({ message: "Upload failed", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Upload failed", error: error.message });
   }
 };
 
-/* ================= GET FEED (posts from following + self) ================= */
+/* ================= DELETE POST ================= */
+export const deletePost = async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const userId = req.user.userId;
+
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    // Only owner can delete
+    if (post.user.toString() !== userId) {
+      return res
+        .status(403)
+        .json({ message: "Not authorized to delete this post" });
+    }
+
+    await Post.findByIdAndDelete(postId);
+
+    return res.status(200).json({
+      success: true,
+      postId,
+      message: "Post deleted successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+/* ================= GET FEED ================= */
 export const getFeed = async (req, res) => {
   try {
     const userId = req.user.userId;
 
-    const following = await Follow.find({ follower: userId }).select("following").lean();
-    const followingIds = following.map((f) => f.following);
-    const feedUserIds = [...followingIds, userId];
+    const following = await Follow.find({ follower: userId })
+      .select("following")
+      .lean();
+
+    const feedUserIds = [
+      ...following.map((f) => f.following),
+      userId,
+    ];
 
     const posts = await Post.find({ user: { $in: feedUserIds } })
       .sort({ createdAt: -1 })
@@ -61,21 +115,27 @@ export const getFeed = async (req, res) => {
       .populate("likes", "username")
       .lean();
 
-    const postsWithFlags = posts.map((p) => ({
+    const formatted = posts.map((p) => ({
       ...p,
       likeCount: p.likes?.length ?? 0,
       commentCount: p.comments?.length ?? 0,
-      isLiked: (p.likes || []).some((l) => (typeof l === "object" ? l._id : l).toString() === userId.toString()),
+      isLiked: (p.likes || []).some(
+        (l) =>
+          (typeof l === "object" ? l._id : l).toString() ===
+          userId.toString()
+      ),
       user: p.user
         ? {
             _id: p.user._id,
             username: p.user.username,
-            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(p.user.username || "U")}&background=3B82F6&color=fff`,
+            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(
+              p.user.username || "U"
+            )}&background=3B82F6&color=fff`,
           }
         : null,
     }));
 
-    return res.status(200).json({ posts: postsWithFlags });
+    return res.status(200).json({ posts: formatted });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: error.message });
@@ -89,14 +149,18 @@ export const likePost = async (req, res) => {
     const userId = req.user.userId;
 
     const post = await Post.findById(postId);
-    if (!post) return res.status(404).json({ message: "Post not found" });
-
-    const hasLiked = post.likes.some((id) => id.toString() === userId);
-    if (hasLiked) {
-      post.likes = post.likes.filter((id) => id.toString() !== userId);
-    } else {
-      post.likes.push(userId);
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
     }
+
+    const hasLiked = post.likes.some(
+      (id) => id.toString() === userId
+    );
+
+    post.likes = hasLiked
+      ? post.likes.filter((id) => id.toString() !== userId)
+      : [...post.likes, userId];
+
     await post.save();
 
     return res.status(200).json({
@@ -116,34 +180,39 @@ export const addComment = async (req, res) => {
     const { text } = req.body;
     const userId = req.user.userId;
 
-    if (!text || !text.trim()) {
-      return res.status(400).json({ message: "Comment text is required" });
+    if (!text?.trim()) {
+      return res
+        .status(400)
+        .json({ message: "Comment text is required" });
     }
 
     const post = await Post.findById(postId);
-    if (!post) return res.status(404).json({ message: "Post not found" });
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
 
     post.comments.push({ user: userId, text: text.trim() });
     await post.save();
 
-    const newComment = post.comments[post.comments.length - 1];
     const populated = await Post.findById(postId)
       .populate("comments.user", "username")
       .lean();
-    const commentObj = populated.comments.find(
-      (c) => c._id.toString() === newComment._id.toString()
-    );
+
+    const comment = populated.comments.at(-1);
 
     return res.status(201).json({
       comment: {
-        _id: commentObj._id,
-        text: commentObj.text,
-        user: commentObj.user
-          ? { _id: commentObj.user._id, username: commentObj.user.username }
+        _id: comment._id,
+        text: comment.text,
+        user: comment.user
+          ? {
+              _id: comment.user._id,
+              username: comment.user.username,
+            }
           : null,
-        createdAt: commentObj.createdAt,
+        createdAt: comment.createdAt,
       },
-      commentCount: post.comments.length,
+      commentCount: populated.comments.length,
     });
   } catch (error) {
     console.error(error);
@@ -161,12 +230,16 @@ export const getComments = async (req, res) => {
       .select("comments")
       .lean();
 
-    if (!post) return res.status(404).json({ message: "Post not found" });
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
 
-    const comments = (post.comments || []).map((c) => ({
+    const comments = post.comments.map((c) => ({
       _id: c._id,
       text: c.text,
-      user: c.user ? { _id: c.user._id, username: c.user.username } : null,
+      user: c.user
+        ? { _id: c.user._id, username: c.user.username }
+        : null,
       createdAt: c.createdAt,
     }));
 
@@ -177,21 +250,19 @@ export const getComments = async (req, res) => {
   }
 };
 
-/* ================= GET POSTS BY USER (for profile) ================= */
+/* ================= GET POSTS BY USER ================= */
 export const getPostsByUser = async (req, res) => {
   try {
-    const { userId } = req.params;
-    const posts = await Post.find({ user: userId })
+    const posts = await Post.find({ user: req.params.userId })
       .sort({ createdAt: -1 })
-      .populate("user", "username")
       .lean();
 
     const formatted = posts.map((p) => ({
       _id: p._id,
       imageUrl: p.imageUrl,
       caption: p.caption,
-      likeCount: (p.likes || []).length,
-      commentCount: (p.comments || []).length,
+      likeCount: p.likes?.length ?? 0,
+      commentCount: p.comments?.length ?? 0,
       createdAt: p.createdAt,
     }));
 

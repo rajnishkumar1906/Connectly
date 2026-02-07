@@ -1,6 +1,9 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { AppContext } from "../context/AppContext";
+import Avatar from "./ui/Avatar";
+import Button from "./ui/Button";
+import { toast } from "react-toastify";
 
 const Recommends = () => {
   const {
@@ -11,64 +14,94 @@ const Recommends = () => {
     isAuthorised,
   } = useContext(AppContext);
 
+  const [loadingId, setLoadingId] = useState(null);
+
   useEffect(() => {
     if (isAuthorised) fetchRecommendedUsers();
   }, [isAuthorised, fetchRecommendedUsers]);
 
   const handleFollow = async (userId) => {
-    await followUser(userId);
+    if (!userId || loadingId) return;
+
+    try {
+      setLoadingId(userId);
+      await followUser(userId);
+      toast.success("Followed successfully");
+    } catch (err) {
+      toast.error("Failed to follow user");
+    } finally {
+      setLoadingId(null);
+    }
   };
 
-  const avatar = user
-    ? `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username || "U")}&background=3B82F6&color=fff`
-    : "";
-
   return (
-    <aside className="w-80 flex-shrink-0 h-screen bg-white border-l border-gray-200 flex flex-col overflow-y-auto">
+    <aside className="hidden lg:flex w-[350px] flex-shrink-0 h-screen bg-white border-l border-gray-200 flex-col overflow-y-auto">
+      {/* Current User */}
       <div className="p-6 border-b border-gray-100">
-        <Link to="/profile" className="flex items-center gap-3">
-          <img
-            src={avatar}
-            alt="Your profile"
-            className="w-14 h-14 rounded-full object-cover"
-          />
-          <div className="min-w-0">
-            <h3 className="font-semibold text-gray-900 truncate">{user?.username ?? "You"}</h3>
-            <p className="text-sm text-gray-500">Your Profile</p>
-          </div>
-        </Link>
+        {user && (
+          <Link to={`/profile/${user._id}`} className="flex items-center gap-3 group">
+            <Avatar
+              src={user.avatar}
+              fallback={user.username}
+              size="lg"
+              className="ring-2 ring-transparent group-hover:ring-blue-100 transition-all"
+            />
+            <div className="min-w-0">
+              <h3 className="font-semibold text-gray-900 truncate group-hover:text-blue-600">
+                {user.username}
+              </h3>
+              <p className="text-sm text-gray-500">View Profile</p>
+            </div>
+          </Link>
+        )}
       </div>
 
+      {/* Suggestions */}
       <div className="px-6 py-4">
-        <h2 className="text-sm font-semibold text-gray-500">Suggestions For You</h2>
+        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
+          Suggestions For You
+        </h2>
       </div>
 
       <div className="flex-1 px-6 space-y-4 pb-6">
         {recommendedUsers.length === 0 ? (
-          <p className="text-sm text-gray-400">No suggestions right now. Follow people to see their posts in your feed.</p>
+          <div className="text-center py-8">
+            <p className="text-sm text-gray-400">No suggestions right now.</p>
+          </div>
         ) : (
           recommendedUsers.map((u) => (
-            <div key={u._id} className="flex items-center gap-3">
-              <Link to={`/profile/${u._id}`} className="flex items-center gap-3 flex-1 min-w-0">
-                <img
-                  src={u.avatar}
-                  alt={u.username}
-                  className="w-10 h-10 rounded-full object-cover flex-shrink-0"
-                />
+            <div key={u._id} className="flex items-center justify-between gap-3">
+              <Link
+                to={`/profile/${u._id}`}
+                className="flex items-center gap-3 flex-1 min-w-0 group"
+              >
+                <Avatar src={u.avatar} fallback={u.username} size="md" />
                 <div className="min-w-0 flex-1">
-                  <h3 className="font-semibold text-sm truncate">{u.username}</h3>
+                  <h3 className="font-semibold text-sm truncate text-gray-900 group-hover:text-blue-600">
+                    {u.username}
+                  </h3>
+                  <p className="text-xs text-gray-500 truncate">
+                    Suggested for you
+                  </p>
                 </div>
               </Link>
-              <button
-                type="button"
+
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={loadingId === u._id}
+                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-2 h-8"
                 onClick={() => handleFollow(u._id)}
-                className="text-xs font-semibold text-blue-600 hover:underline flex-shrink-0"
               >
-                Follow
-              </button>
+                {loadingId === u._id ? "..." : "Follow"}
+              </Button>
             </div>
           ))
         )}
+      </div>
+
+      <div className="px-6 py-6 text-xs text-gray-400 border-t border-gray-100">
+        <p>© 2026 Connectly</p>
       </div>
     </aside>
   );
