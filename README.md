@@ -1,5 +1,4 @@
-<<<<<<< HEAD
-=======
+
 # 🌐 Connectly
 
 **Connectly** is a modern full-stack social media platform built with the **MERN stack**.  
@@ -238,5 +237,3 @@ npm run dev
 > 💡 *Connectly demonstrates real-world social media architecture with clean separation of concerns, scalable APIs, and real-time communication — suitable for production-level systems and strong portfolio showcase.*
 
 ```
->>>>>>> e746cb1 (Updated Github)
-
