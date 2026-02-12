@@ -23,7 +23,6 @@ const SideNav = ({ onOpenCreate }) => {
 
   const [showLogout, setShowLogout] = useState(false);
 
-  /* ---------------- CLOSE LOGOUT POPOVER ---------------- */
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (popoverRef.current && !popoverRef.current.contains(e.target)) {
@@ -34,24 +33,21 @@ const SideNav = ({ onOpenCreate }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  /* ---------------- LOGOUT ---------------- */
   const handleLogout = async () => {
     await logout();
     navigate("/login", { replace: true });
   };
 
-  /* ---------------- NAV ITEMS ---------------- */
   const navItems = [
     { label: "Home", path: "/", icon: Home },
-    { label: "Profile", path: "/profile", icon: User },
     { label: "Messages", path: "/messages", icon: MessageCircle },
     { label: "Discover", path: "/discover", icon: Compass },
     { label: "Create", isCreate: true, icon: PlusSquare },
+    { label: "Profile", path: "/profile", icon: User },
     { label: "Notifications", path: "/notifications", icon: Bell },
     { label: "Settings", path: "/settings", icon: Settings }
   ];
 
-  /* ---------------- ACTIVE CHECK ---------------- */
   const isActive = (path) => {
     if (!path) return false;
     if (path === "/") return location.pathname === "/";
@@ -59,60 +55,34 @@ const SideNav = ({ onOpenCreate }) => {
   };
 
   return (
-    <aside className="w-72 border-r bg-white h-screen flex flex-col">
+    <aside className="w-64 border-r border-gray-800 bg-black h-screen flex flex-col sticky top-0">
 
-      {/* ---------------- LOGO ---------------- */}
-      <div className="p-4 border-b flex justify-center">
-        <Link to="/">
-          <img src="/connectly.svg" alt="Connectly" className="h-9" />
+      {/* LOGO */}
+      <div className="p-4 border-b border-gray-800">
+        <Link to="/" className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+            <span className="text-black font-bold">C</span>
+          </div>
+          <span className="text-xl font-bold text-white">Connectly</span>
         </Link>
       </div>
 
-      {/* ---------------- USER INFO ---------------- */}
-      {user && (
-        <div className="p-4 flex items-center gap-3 border-b">
-          <Avatar fallback={user.username} src={user.avatar} size="md" />
-          <div className="min-w-0">
-            <p className="font-semibold text-sm truncate">{user.username}</p>
-            <p className="text-xs text-gray-500 truncate">{user.email}</p>
-          </div>
-        </div>
-      )}
-
-      {/* ---------------- NAV ---------------- */}
+      {/* NAV */}
       <nav className="flex-1 px-3 py-4 space-y-1">
         {navItems.map(({ label, path, icon: Icon, isCreate }) => {
           const active = isActive(path);
-
-          const baseClass =
-            "flex items-center gap-3 px-4 py-3 rounded-lg transition font-medium";
-
-          const activeClass = active
-            ? "bg-blue-50 text-blue-600"
-            : "text-gray-700 hover:bg-gray-50";
-
-          const content = (
-            <>
-              <span className="relative">
-                <Icon size={22} />
-                {label === "Notifications" && unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[11px] rounded-full flex items-center justify-center">
-                    {unreadCount}
-                  </span>
-                )}
-              </span>
-              <span>{label}</span>
-            </>
-          );
-
+          
           if (isCreate) {
             return (
               <button
                 key={label}
                 onClick={onOpenCreate}
-                className={`${baseClass} ${activeClass} w-full`}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition w-full text-left ${
+                  active ? "bg-white text-black" : "text-gray-400 hover:text-white hover:bg-gray-900"
+                }`}
               >
-                {content}
+                <Icon size={22} />
+                <span className="font-medium">{label}</span>
               </button>
             );
           }
@@ -121,55 +91,73 @@ const SideNav = ({ onOpenCreate }) => {
             <Link
               key={label}
               to={path}
-              className={`${baseClass} ${activeClass}`}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition ${
+                active ? "bg-white text-black" : "text-gray-400 hover:text-white hover:bg-gray-900"
+              }`}
             >
-              {content}
+              <div className="relative">
+                <Icon size={22} />
+                {label === "Notifications" && unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-white text-black text-xs rounded-full flex items-center justify-center">
+                    {unreadCount}
+                  </span>
+                )}
+              </div>
+              <span className="font-medium">{label}</span>
             </Link>
           );
         })}
       </nav>
 
-      {/* ---------------- LOGOUT ---------------- */}
-      <div className="p-3 border-t relative">
-        <button
-          onClick={() => setShowLogout((p) => !p)}
-          className="flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 w-full"
-        >
-          <LogOut size={22} />
-          <span>Log out</span>
-        </button>
-
-        {showLogout && (
-          <div
-            ref={popoverRef}
-            className="absolute left-4 bottom-16 w-64 bg-white border rounded-xl shadow-lg p-4 z-50"
-          >
-            <p className="font-semibold text-sm mb-1">Log out?</p>
-            <p className="text-xs text-gray-500 mb-4">
-              You’ll need to log in again.
-            </p>
-
-            <div className="flex gap-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                className="flex-1"
-                onClick={() => setShowLogout(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="danger"
-                size="sm"
-                className="flex-1"
-                onClick={handleLogout}
-              >
-                Log out
-              </Button>
+      {/* USER PROFILE */}
+      {user && (
+        <div className="p-4 border-t border-gray-800">
+          <div className="flex items-center gap-3">
+            <Avatar fallback={user.username} src={user.avatar} size="md" className="border border-gray-700" />
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-white truncate">{user.username}</p>
+              <p className="text-xs text-gray-400 truncate">@{user.username}</p>
             </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowLogout(!showLogout)}
+              className="text-gray-400 hover:text-white"
+            >
+              <LogOut size={20} />
+            </Button>
           </div>
-        )}
-      </div>
+
+          {/* LOGOUT POPOVER */}
+          {showLogout && (
+            <div
+              ref={popoverRef}
+              className="absolute left-4 bottom-20 w-56 bg-gray-900 border border-gray-800 rounded-lg p-4 z-50"
+            >
+              <p className="text-white text-sm mb-1">Log out?</p>
+              <p className="text-gray-400 text-xs mb-4">You'll need to log in again.</p>
+              <div className="flex gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="flex-1 border border-gray-700"
+                  onClick={() => setShowLogout(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  className="flex-1 bg-white text-black hover:bg-gray-200"
+                  onClick={handleLogout}
+                >
+                  Log out
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </aside>
   );
 };

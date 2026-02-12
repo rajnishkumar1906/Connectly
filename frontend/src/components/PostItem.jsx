@@ -16,9 +16,9 @@ function formatTime(createdAt) {
   const days = Math.floor(diffMs / 86400000);
 
   if (mins < 1) return "Just now";
-  if (mins < 60) return `${mins}m ago`;
-  if (hours < 24) return `${hours}h ago`;
-  if (days < 7) return `${days}d ago`;
+  if (mins < 60) return `${mins}m`;
+  if (hours < 24) return `${hours}h`;
+  if (days < 7) return `${days}d`;
 
   return date.toLocaleDateString();
 }
@@ -32,7 +32,6 @@ const PostItem = ({ post, onLike, onComment, getComments }) => {
 
   const user = post.user ?? {};
   const userId = user._id ?? "";
-
   const commentCount = post.commentCount ?? post.comments?.length ?? 0;
 
   const loadComments = async () => {
@@ -56,7 +55,6 @@ const PostItem = ({ post, onLike, onComment, getComments }) => {
     if (!commentText.trim()) return;
 
     const comment = await onComment(post._id, commentText.trim());
-
     if (comment) {
       setComments(prev => [...prev, comment]);
       setCommentText("");
@@ -71,41 +69,41 @@ const PostItem = ({ post, onLike, onComment, getComments }) => {
   };
 
   return (
-    <article className="bg-white border border-gray-200 rounded-xl overflow-hidden mb-6 shadow-sm">
+    <article className="border-b border-gray-800">
       {/* Header */}
       <div className="flex items-center justify-between p-4">
         {userId ? (
-          <Link to={`/profile/${userId}`} className="flex items-center gap-3 group">
+          <Link to={`/profile/${userId}`} className="flex items-center gap-3">
             <Avatar
               src={user.avatar}
               fallback={user.username}
               size="md"
-              className="ring-2 ring-transparent group-hover:ring-blue-100 transition-all"
+              className="border border-gray-700"
             />
             <div>
-              <p className="font-semibold text-sm text-gray-900 group-hover:text-blue-600">
+              <p className="font-semibold text-sm text-white">
                 {user.username}
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-400">
                 {formatTime(post.createdAt)}
               </p>
             </div>
           </Link>
         ) : (
           <div className="flex items-center gap-3">
-            <Avatar fallback="U" />
-            <span className="text-sm text-gray-600">Unknown user</span>
+            <Avatar fallback="U" className="border border-gray-700" />
+            <span className="text-sm text-gray-400">Unknown user</span>
           </div>
         )}
 
-        <Button variant="ghost" size="icon" className="text-gray-400 hover:text-gray-600">
+        <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white">
           <MoreHorizontal size={20} />
         </Button>
       </div>
 
       {/* Image */}
       {post.imageUrl && (
-        <div className="relative aspect-square bg-gray-100">
+        <div className="relative aspect-square bg-black">
           <img
             src={post.imageUrl}
             alt="Post"
@@ -114,13 +112,23 @@ const PostItem = ({ post, onLike, onComment, getComments }) => {
         </div>
       )}
 
+      {/* Caption */}
+      {post.caption && (
+        <div className="px-4 pt-3">
+          <p className="text-white">
+            <span className="font-semibold mr-2">{user.username}</span>
+            {post.caption}
+          </p>
+        </div>
+      )}
+
       {/* Actions */}
       <div className="p-4">
-        <div className="flex items-center gap-2 mb-3">
+        <div className="flex items-center gap-4 mb-3">
           <button
             onClick={handleLike}
-            className={`p-2 -ml-2 rounded-full hover:bg-gray-50 transition-colors ${
-              post.isLiked ? "text-red-500" : "text-gray-600 hover:text-gray-900"
+            className={`p-1 ${
+              post.isLiked ? "text-red-500" : "text-gray-400 hover:text-white"
             }`}
           >
             <Heart size={24} fill={post.isLiked ? "currentColor" : "none"} />
@@ -128,47 +136,40 @@ const PostItem = ({ post, onLike, onComment, getComments }) => {
 
           <button
             onClick={loadComments}
-            className="p-2 rounded-full text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+            className="p-1 text-gray-400 hover:text-white"
           >
             <MessageCircle size={24} />
           </button>
 
-          <button className="p-2 rounded-full text-gray-600 hover:text-gray-900 hover:bg-gray-50">
+          <button className="p-1 text-gray-400 hover:text-white">
             <Send size={24} />
           </button>
         </div>
 
-        <p className="font-semibold text-sm mb-2">
+        <p className="font-semibold text-sm text-gray-300 mb-2">
           {(post.likeCount ?? 0).toLocaleString()} likes
         </p>
-
-        {post.caption && (
-          <p className="text-sm mb-2">
-            <span className="font-semibold mr-2">{user.username}</span>
-            <span className="text-gray-800">{post.caption}</span>
-          </p>
-        )}
 
         {commentCount > 0 && (
           <button
             onClick={loadComments}
-            className="text-sm text-gray-500 mb-2 hover:text-gray-700 font-medium"
+            className="text-sm text-gray-400 mb-3 hover:text-white"
           >
-            {loadingComments ? "Loading..." : `View all ${commentCount} comments`}
+            {loadingComments ? "Loading..." : `View ${commentCount} comments`}
           </button>
         )}
 
         {commentsOpen && (
-          <div className="space-y-2 mb-3 max-h-60 overflow-y-auto pr-2">
+          <div className="space-y-2 mb-3 max-h-60 overflow-y-auto">
             {comments.map((c) => (
               <div
                 key={c._id || `${c.user?._id}-${c.createdAt}`}
                 className="flex gap-2 text-sm"
               >
-                <span className="font-semibold text-gray-900">
+                <span className="font-semibold text-white">
                   {c.user?.username}
                 </span>
-                <span className="text-gray-700">{c.text}</span>
+                <span className="text-gray-300">{c.text}</span>
               </div>
             ))}
           </div>
@@ -177,21 +178,21 @@ const PostItem = ({ post, onLike, onComment, getComments }) => {
         {/* Add comment */}
         <form
           onSubmit={submitComment}
-          className="flex items-center gap-3 border-t border-gray-100 pt-3 mt-2"
+          className="flex items-center gap-2 border-t border-gray-800 pt-3"
         >
           <Input
             type="text"
             placeholder="Add a comment..."
             value={commentText}
             onChange={(e) => setCommentText(e.target.value)}
-            className="flex-1 text-sm border-none bg-transparent focus:ring-0 px-0"
+            className="flex-1 text-sm bg-transparent border-gray-800 text-white placeholder-gray-500"
           />
           {commentText.trim() && (
             <Button
               type="submit"
               variant="ghost"
               size="sm"
-              className="text-blue-600 hover:bg-blue-50 font-semibold"
+              className="text-white hover:bg-gray-800"
             >
               Post
             </Button>

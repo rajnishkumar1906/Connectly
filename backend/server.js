@@ -14,7 +14,7 @@ import friendsRouter from "./router/friendsRouter.js";
 import notificationRouter from "./router/notificationRouter.js";
 import chatRouter from "./router/chatRouter.js";
 
-import chatSocket from "./socket/chatSocket.js"; // socket handler
+import chatSocket from "./socket/chatSocket.js";
 
 dotenv.config();
 
@@ -36,6 +36,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
+/* ✅ ADD THIS (required for avatar/cover) */
+app.use("/temp", express.static("temp"));
+
 /* ================= ROUTES ================= */
 app.use("/api/users", userRouter);
 app.use("/api/feed", feedRouter);
@@ -43,10 +46,7 @@ app.use("/api/friends", friendsRouter);
 app.use("/api/notifications", notificationRouter);
 app.use("/api/chat", chatRouter);
 
-/* ========================================================= */
-/* ================= SOCKET.IO INTEGRATION ================= */
-/* ========================================================= */
-
+/* ================= SOCKET ================= */
 const server = http.createServer(app);
 
 const io = new Server(server, {
@@ -56,11 +56,9 @@ const io = new Server(server, {
   },
 });
 
-/* 🔥 Attach socket handler AFTER io created */
 chatSocket(io);
 
 /* ================= START SERVER ================= */
-
 const PORT = process.env.PORT || 5000;
 
 server.listen(PORT, () => {

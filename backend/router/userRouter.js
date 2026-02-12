@@ -1,13 +1,9 @@
 import { Router } from "express";
 import { authMiddleware } from "../middleware/authMiddleware.js";
+import { createUploader } from "../middleware/upload.js";
 
 /* AUTH */
-import {
-  login,
-  signUp,
-  logout,
-  getMe,
-} from "../controller/userAuth.js";
+import { login, signUp, logout, getMe } from "../controller/userAuth.js";
 
 /* PROFILE */
 import {
@@ -30,6 +26,9 @@ import { getRecommendedUsers } from "../controller/recommendsController.js";
 
 const router = Router();
 
+/* ✅ ADD uploader */
+const profileUpload = createUploader("profile");
+
 /* ================= AUTH ================= */
 router.get("/me", authMiddleware, getMe);
 router.post("/login", login);
@@ -39,14 +38,23 @@ router.post("/logout", authMiddleware, logout);
 /* ================= PROFILE ================= */
 router.get("/retrieve-profile", authMiddleware, getOwnProfile);
 router.get("/:userId/profile", getProfileByUserId);
-router.patch("/update-profile", authMiddleware, updateProfile);
+
+/* ✅ FIXED PROFILE UPDATE */
+router.patch(
+  "/update-profile",
+  authMiddleware,
+  profileUpload.fields([
+    { name: "avatar", maxCount: 1 },
+    { name: "cover", maxCount: 1 },
+  ]),
+  updateProfile
+);
 
 /* ================= FOLLOW ================= */
 router.post("/follow/:userId", authMiddleware, followUser);
 router.delete("/unfollow/:userId", authMiddleware, unfollowUser);
 router.get("/check-follow/:userId", authMiddleware, checkFollow);
 
-/* ================= FOLLOWERS / FOLLOWING ================= */
 router.get("/followers", authMiddleware, getUserFollowers);
 router.get("/followers/:userId", authMiddleware, getUserFollowers);
 

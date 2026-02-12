@@ -2,35 +2,29 @@ import React, { useContext, useState, useEffect } from "react";
 import { AppContext } from "../context/AppContext";
 import PostItem from "./PostItem";
 import Avatar from "./ui/Avatar";
+import { Sparkles, Search, MessageCircle } from "lucide-react";
 
-/* =======================
-   Stories
-======================= */
-const Stories = ({ stories }) => {
+const Stories = () => {
+  const stories = [
+    { id: 1, username: "Aarav" },
+    { id: 2, username: "Isha" },
+    { id: 3, username: "Rohan" },
+    { id: 4, username: "Sanya" },
+    { id: 5, username: "Aditya" },
+  ];
+
   return (
-    <div className="bg-white border border-gray-200 rounded-xl mb-6 p-4 shadow-sm">
-      <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
+    <div className="border-b border-gray-800 pb-3">
+      <div className="flex gap-4 overflow-x-auto no-scrollbar">
         {stories.map((story) => (
-          <div
-            key={story.id}
-            className="flex flex-col items-center min-w-[80px] cursor-pointer group"
-          >
-            <div
-              className={`w-20 h-28 rounded-xl p-[2px] group-hover:scale-105 transition-transform duration-200 ${
-                story.isSelf
-                  ? "bg-gradient-to-tr from-blue-500 via-cyan-500 to-teal-400"
-                  : "bg-gradient-to-tr from-pink-500 via-red-500 to-yellow-400"
-              }`}
-            >
-              <div className="w-full h-full rounded-[10px] bg-white p-[2px] overflow-hidden">
-                <img
-                  src={story.image}
-                  alt={story.username}
-                  className="w-full h-full object-cover rounded-lg"
-                />
-              </div>
+          <div key={story.id} className="flex flex-col items-center min-w-[70px]">
+            <div className="w-16 h-16 rounded-full border border-gray-600 mb-2 overflow-hidden">
+              <Avatar
+                fallback={story.username}
+                size="full"
+              />
             </div>
-            <p className="text-xs mt-1.5 text-gray-700 truncate w-20 text-center group-hover:text-gray-900">
+            <p className="text-xs text-gray-400 truncate w-16 text-center">
               {story.username}
             </p>
           </div>
@@ -40,30 +34,9 @@ const Stories = ({ stories }) => {
   );
 };
 
-/* =======================
-   Home
-======================= */
 const Home = () => {
-  const { user, feed, fetchFeed, likePost, addComment, getComments } =
-    useContext(AppContext);
-
+  const { user, feed, fetchFeed, likePost, addComment, getComments } = useContext(AppContext);
   const [loading, setLoading] = useState(true);
-
-  // Mock stories
-  const stories = [
-    {
-      id: "self",
-      username: "Your Story",
-      image: user?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&h=300&fit=crop",
-      isSelf: true,
-    },
-    { id: 1, username: "Aarav", image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&h=300&fit=crop" },
-    { id: 2, username: "Isha", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=300&fit=crop" },
-    { id: 3, username: "Rohan", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=300&fit=crop" },
-    { id: 4, username: "Sanya", image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=300&fit=crop" },
-    { id: 5, username: "Aditya", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=300&fit=crop" },
-    { id: 6, username: "Riya", image: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&h=300&fit=crop" },
-  ];
 
   useEffect(() => {
     fetchFeed().finally(() => setLoading(false));
@@ -71,34 +44,52 @@ const Home = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+          <p className="text-gray-400">Loading...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto py-8 px-4">
-      <Stories stories={stories} />
+    <div className="min-h-screen bg-black text-white">
+        {/* Stories */}
+        <div className="p-4 border-b border-gray-800">
+          <Stories />
+        </div>
 
-      <div className="space-y-6">
-        {feed.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
-            <p className="text-gray-500">No posts yet. Follow people to see their posts!</p>
-          </div>
-        ) : (
-          feed.map((post) => (
-            <PostItem
-              key={post._id}
-              post={post}
-              onLike={likePost}
-              onComment={addComment}
-              getComments={getComments}
-            />
-          ))
-        )}
+        {/* Feed */}
+        <div>
+          {feed.length === 0 ? (
+            <div className="text-center py-12 px-4">
+              <div className="w-16 h-16 bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-800">
+                <Sparkles className="w-8 h-8 text-gray-600" />
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2">Welcome!</h3>
+              <p className="text-gray-400 mb-4">Follow people to see posts here.</p>
+              <button className="px-4 py-2 bg-white text-black rounded-lg hover:bg-gray-200">
+                Discover People
+              </button>
+            </div>
+          ) : (
+            <div>
+              {feed.map((post) => (
+                <div key={post._id} className="border-b border-gray-800">
+                  <PostItem
+                    post={post}
+                    onLike={likePost}
+                    onComment={addComment}
+                    getComments={getComments}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    
   );
 };
 

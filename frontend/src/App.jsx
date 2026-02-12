@@ -13,11 +13,9 @@ import SplashScreen from "./components/SplashScreen";
 import "react-toastify/dist/ReactToastify.css";
 import Notification from "./pages/Notifications";
 
-/* ================= PROTECTED ROUTE ================= */
 function ProtectedRoute({ children }) {
   const { isAuthorised, loading } = useContext(AppContext);
 
-  // Optional: prevent flicker while checking auth
   if (loading) return null;
 
   if (!isAuthorised) {
@@ -27,7 +25,6 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
-/* ================= APP ================= */
 function App() {
   const [showSplash, setShowSplash] = useState(true);
 
@@ -44,7 +41,6 @@ function App() {
 
   return (
     <>
-      {/* 🔔 Global toast infrastructure (ONCE) */}
       <ToastContainer position="top-right" autoClose={2000} />
 
       <Routes>
@@ -64,13 +60,22 @@ function App() {
           <Route path="/profile/:userId" element={<Profile />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/discover" element={<Discover />} />
-
           <Route path="/notifications" element={<Notification/>} />
         </Route>
 
-        {/* Messages (Separate layout if needed, or move into MainLayout if desired) */}
+        {/* Messages has its own full-page layout */}
         <Route
           path="/messages"
+          element={
+            <ProtectedRoute>
+              <Messages />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Messages conversation detail */}
+        <Route
+          path="/messages/:conversationId"
           element={
             <ProtectedRoute>
               <Messages />

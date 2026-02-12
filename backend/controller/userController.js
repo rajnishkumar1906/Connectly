@@ -77,7 +77,6 @@ export const updateProfile = async (req, res) => {
       profile = new Profile({ user: userId });
     }
 
-    // ✅ Explicitly allow only these fields
     const allowedFields = [
       "firstName",
       "lastName",
@@ -85,6 +84,9 @@ export const updateProfile = async (req, res) => {
       "city",
       "state",
       "bio",
+      "website",
+      "occupation",
+      "education",
     ];
 
     allowedFields.forEach((field) => {
@@ -92,6 +94,16 @@ export const updateProfile = async (req, res) => {
         profile[field] = req.body[field];
       }
     });
+
+    /* ✅ ADD avatar */
+    if (req.files?.avatar?.[0]) {
+      profile.avatar = `/temp/profile/${req.files.avatar[0].filename}`;
+    }
+
+    /* ✅ ADD cover */
+    if (req.files?.cover?.[0]) {
+      profile.coverImage = `/temp/profile/${req.files.cover[0].filename}`;
+    }
 
     await profile.save();
 

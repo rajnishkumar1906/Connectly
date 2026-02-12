@@ -72,13 +72,21 @@ followSchema.index({ follower: 1, following: 1 }, { unique: true });
 ========================================================= */
 const profileSchema = new Schema(
   {
-    profilePicture: { type: String, default: "" },
+    profilePicture: { type: String, default: "" }, // keep (old)
+
+    avatar: { type: String, default: "" },        // ✅ add
+    coverImage: { type: String, default: "" },    // ✅ add
+
     firstName: { type: String, default: "" },
     lastName: { type: String, default: "" },
     phoneNo: { type: String, default: "" },
     city: { type: String, default: "" },
     state: { type: String, default: "" },
     bio: { type: String, default: "" },
+
+    website: { type: String, default: "" },       // ✅ add
+    occupation: { type: String, default: "" },    // ✅ add
+    education: { type: String, default: "" },     // ✅ add
 
     user: {
       type: Schema.Types.ObjectId,
@@ -90,6 +98,7 @@ const profileSchema = new Schema(
   },
   { timestamps: true }
 );
+
 
 /* =========================================================
    FRIENDSHIP SCHEMA

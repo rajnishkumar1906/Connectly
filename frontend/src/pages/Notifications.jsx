@@ -1,7 +1,7 @@
 import React, { useEffect, useContext } from "react";
 import { AppContext } from "../context/AppContext";
 import Avatar from "../components/ui/Avatar";
-import { Bell } from "lucide-react";
+import { Bell, UserPlus, Heart, MessageCircle, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const formatTime = (date) => {
@@ -12,10 +12,10 @@ const formatTime = (date) => {
   const days = Math.floor(diff / 86400000);
 
   if (mins < 1) return "Just now";
-  if (mins < 60) return `${mins}m ago`;
-  if (hours < 24) return `${hours}h ago`;
-  if (days < 7) return `${days}d ago`;
-
+  if (mins < 60) return `${mins}m`;
+  if (hours < 24) return `${hours}h`;
+  if (days < 7) return `${days}d`;
+  
   return new Date(date).toLocaleDateString();
 };
 
@@ -31,58 +31,133 @@ const Notifications = () => {
     if (isAuthorised) fetchNotifications();
   }, [isAuthorised, fetchNotifications]);
 
-  if (!notifications || notifications.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full text-gray-400">
-        <Bell size={48} />
-        <p className="mt-3 text-sm">No notifications yet</p>
-      </div>
-    );
-  }
+  const getNotificationIcon = (type) => {
+    switch (type) {
+      case "follow":
+        return <UserPlus className="w-5 h-5 text-white" />;
+      case "like":
+        return <Heart className="w-5 h-5 text-white" />;
+      case "comment":
+        return <MessageCircle className="w-5 h-5 text-white" />;
+      default:
+        return <Users className="w-5 h-5 text-white" />;
+    }
+  };
+
+  const getNotificationMessage = (notification) => {
+    switch (notification.type) {
+      case "follow":
+        return "followed you";
+      case "like":
+        return "liked your post";
+      case "comment":
+        return "commented on your post";
+      case "mention":
+        return "mentioned you";
+      default:
+        return "interacted with you";
+    }
+  };
 
   return (
-    <div className="max-w-3xl mx-auto p-6">
-      <h1 className="text-xl font-bold mb-6">Notifications</h1>
-
-      <div className="space-y-3">
-        {notifications.map((n) => (
-          <div
-            key={n._id}
-            onClick={() => {
-              if (!n.isRead) markNotificationRead(n._id);
-            }}
-            className={`flex items-center gap-4 p-4 rounded-xl cursor-pointer border transition ${
-              n.isRead
-                ? "bg-white border-gray-200"
-                : "bg-blue-50 border-blue-200 hover:bg-blue-100"
-            }`}
-          >
-            <Link to={`/profile/${n.sender?._id}`}>
-              <Avatar
-                src={n.sender?.avatar}
-                fallback={n.sender?.username}
-                size="md"
-              />
-            </Link>
-
-            <div className="flex-1">
-              <p className="text-sm text-gray-900">
-                <span className="font-semibold">
-                  {n.sender?.username}
-                </span>{" "}
-                {n.type === "follow" && "started following you"}
-              </p>
-
-              <p className="text-xs text-gray-500 mt-1">
-                {formatTime(n.createdAt)}
-              </p>
+    <div className="min-h-screen bg-black text-white">
+      {/* Header */}
+      <div className="sticky top-0 z-10 bg-black border-b border-gray-800 px-4 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+              <span className="text-black font-bold">C</span>
             </div>
-
-            {!n.isRead && (
-              <span className="w-2 h-2 bg-blue-600 rounded-full" />
-            )}
+            <h1 className="text-xl font-bold">Notifications</h1>
           </div>
-        ))}
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="max-w-2xl mx-auto">
+        {/* Filter Tabs */}
+        <div className="flex border-b border-gray-800">
+          <button className="flex-1 py-4 font-medium text-sm border-b-2 border-white">
+            All
+          </button>
+          <button className="flex-1 py-4 font-medium text-sm text-gray-400">
+            Verified
+          </button>
+          <button className="flex-1 py-4 font-medium text-sm text-gray-400">
+            Mentions
+          </button>
+        </div>
+
+        {/* Notifications List */}
+        {(!notifications || notifications.length === 0) ? (
+          <div className="text-center py-12 px-4">
+            <div className="w-16 h-16 bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-800">
+              <Bell className="w-8 h-8 text-gray-600" />
+            </div>
+            <h3 className="text-lg font-bold text-white mb-2">No notifications</h3>
+            <p className="text-gray-400">When you get notifications, they'll appear here.</p>
+          </div>
+        ) : (
+          <div>
+            {notifications.map((notification) => (
+              <div
+                key={notification._id}
+                onClick={() => {
+                  if (!notification.isRead) markNotificationRead(notification._id);
+                }}
+                className={`flex items-start gap-3 p-4 border-b border-gray-800 cursor-pointer hover:bg-gray-900 ${
+                  !notification.isRead ? "bg-gray-900/50" : ""
+                }`}
+              >
+                {/* Icon */}
+                <div className="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center">
+                  {getNotificationIcon(notification.type)}
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-1 flex-wrap">
+                      <Link 
+                        to={`/profile/${notification.sender?._id}`}
+                        className="font-bold text-white hover:underline"
+                      >
+                        {notification.sender?.username}
+                      </Link>
+                      <span className="text-gray-400">
+                        {getNotificationMessage(notification)}
+                      </span>
+                    </div>
+                    <span className="text-sm text-gray-500">
+                      {formatTime(notification.createdAt)}
+                    </span>
+                  </div>
+
+                  {/* Extra Content */}
+                  {notification.post?.caption && (
+                    <p className="text-gray-400 text-sm mt-2 line-clamp-2">
+                      {notification.post.caption}
+                    </p>
+                  )}
+                </div>
+
+                {/* Unread Indicator */}
+                {!notification.isRead && (
+                  <div className="w-2 h-2 bg-white rounded-full mt-2"></div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Clear All Button */}
+        {notifications?.length > 0 && (
+          <div className="p-4 border-t border-gray-800">
+            <button className="w-full py-2.5 border border-gray-700 text-gray-400 rounded-lg hover:bg-gray-900 hover:text-white">
+              Clear all notifications
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

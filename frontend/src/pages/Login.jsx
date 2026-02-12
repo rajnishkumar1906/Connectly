@@ -1,140 +1,117 @@
 import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AppContext } from "../context/AppContext.jsx";
+import { AppContext } from "../context/AppContext";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
-import Divider from "../components/ui/Divider";
 
-/* ================= LOGIN ================= */
 const Login = () => {
-  const {
-    login,
-    signup,
-    loading,
-    isAuthorised,
-  } = useContext(AppContext);
-
+  const { login, signup, loading = false, isAuthorised } = useContext(AppContext);
   const navigate = useNavigate();
 
   const [isSignUp, setIsSignUp] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
-    firstname: "",
-    lastname: "",
     email: "",
     password: "",
   });
 
-  /* ---------- Redirect after successful auth ---------- */
   useEffect(() => {
-    if (isAuthorised) {
-      navigate("/", { replace: true });
-    }
+    if (isAuthorised) navigate("/", { replace: true });
   }, [isAuthorised, navigate]);
 
-  /* ---------- Input handling ---------- */
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
   };
 
-  /* ---------- Submit ---------- */
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (loading) return;
 
-    if (isSignUp) {
-      // ONLY send what backend expects
-      await signup({
-        username: formData.username,
-        email: formData.email,
-        password: formData.password,
-      });
-    } else {
-      await login(formData.email, formData.password);
+    try {
+      if (isSignUp) {
+        await signup(formData);
+      } else {
+        await login(formData.email, formData.password);
+      }
+    } catch (err) {
+      console.error(err);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-sky-50 to-pink-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+    <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
+      <div className="w-full max-w-md">
 
-        {/* LEFT SIDE */}
-        <div className="hidden lg:flex flex-col justify-center">
-          <img src="/connectly.svg" alt="Connectly" className="h-20 w-auto mb-6" />
-          <h2 className="text-3xl font-semibold text-gray-800 mb-3">
-            Connect with people who matter
-          </h2>
-          <p className="text-lg text-gray-600 max-w-md mb-10">
-            Share moments, explore stories, and stay connected with your world.
-          </p>
+        {/* Logo */}
+        <div className="flex justify-center mb-8">
+          <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center">
+            <span className="text-black text-2xl font-bold">C</span>
+          </div>
         </div>
 
-        {/* RIGHT SIDE */}
-        <div className="flex justify-center">
-          <div className="w-full max-w-md bg-white rounded-2xl shadow-xl px-8 py-10">
+        {/* Form */}
+        <div className="bg-gray-900 border border-gray-800 rounded-lg p-8">
+          <h1 className="text-2xl font-bold text-center mb-2">
+            {isSignUp ? "Join Connectly" : "Welcome back"}
+          </h1>
 
-            <h1 className="text-2xl font-bold text-center mb-1">
-              {isSignUp ? "Create account" : "Welcome back"}
-            </h1>
+          <p className="text-gray-400 text-center mb-6">
+            {isSignUp ? "Create your account" : "Sign in to continue"}
+          </p>
 
-            <p className="text-gray-500 text-center mb-8">
-              {isSignUp ? "Sign up to start sharing" : "Log in to continue"}
-            </p>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {isSignUp && (
-                <Input
-                  name="username"
-                  placeholder="Username"
-                  value={formData.username}
-                  onChange={handleChange}
-                  required
-                />
-              )}
-
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {isSignUp && (
               <Input
-                type="email"
-                name="email"
-                placeholder="Email"
-                value={formData.email}
+                name="username"
+                placeholder="Username"
+                value={formData.username}
                 onChange={handleChange}
                 required
               />
+            )}
 
-              <Input
-                type="password"
-                name="password"
-                placeholder="Password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-              />
+            <Input
+              type="email"
+              name="email"
+              placeholder="Email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+            />
 
-              <Button
-                type="submit"
-                variant="gradient"
-                className="w-full"
-                isLoading={loading}
-              >
-                {isSignUp ? "Sign up" : "Log in"}
-              </Button>
-            </form>
+            <Input
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+            />
 
-            <Divider label="OR" />
+            {/* FIXED BUTTON */}
+            <Button
+              type="submit"
+              className="w-full bg-white !text-black py-2 rounded-lg hover:bg-gray-200"
+              disabled={loading}
+            >
+              {loading ? "Loading..." : isSignUp ? "Sign Up" : "Log In"}
+            </Button>
+          </form>
 
-            <p className="mt-6 text-center text-gray-600">
-              {isSignUp ? "Already have an account?" : "New to Connectly?"}{" "}
-              <button
-                type="button"
-                onClick={() => setIsSignUp((prev) => !prev)}
-                className="text-blue-600 font-semibold hover:underline"
-              >
-                {isSignUp ? "Log in" : "Sign up"}
-              </button>
-            </p>
-
-          </div>
+          <p className="text-center text-gray-400 mt-6">
+            {isSignUp ? "Already have an account?" : "New here?"}{" "}
+            <button
+              type="button"
+              onClick={() => setIsSignUp(!isSignUp)}
+              className="text-white font-semibold hover:underline"
+            >
+              {isSignUp ? "Log in" : "Sign up"}
+            </button>
+          </p>
         </div>
       </div>
     </div>

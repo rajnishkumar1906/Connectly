@@ -26,16 +26,19 @@ const MainLayout = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-black text-white">
+      {/* Left Sidebar */}
       <SideNav onOpenCreate={() => setIsCreateOpen(true)} />
 
-      {/* 🔑 ONLY SCROLL CONTAINER */}
-      <main className="flex-1 overflow-y-auto min-w-0">
+      {/* Main Content */}
+      <main className="flex-1 overflow-y-auto min-w-0 border-x border-gray-800">
         <Outlet />
       </main>
 
+      {/* Right Sidebar */}
       <Recommends />
 
+      {/* Create Post Modal */}
       <CreatePost
         isOpen={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
