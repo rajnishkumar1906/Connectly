@@ -1,0 +1,149 @@
+========================
+MULTER – QUICK REVISION
+========================
+
+WHAT IS MULTER?
+---------------
+Multer is Express middleware used to handle
+multipart/form-data requests (file uploads).
+
+Express CANNOT read files by default.
+Multer parses files and makes them available as:
+- req.file
+- req.files
+
+
+WHY MULTER IS NEEDED
+-------------------
+Browser sends files using:
+Content-Type: multipart/form-data
+
+Express can read:
+- JSON ✅
+- URL-encoded data ✅
+- Files ❌
+
+Multer fills this gap.
+
+
+WHAT MULTER DOES
+----------------
+✔ Parses multipart/form-data
+✔ Extracts files from request
+✔ Stores files temporarily (disk or memory)
+✔ Adds file info to req.file / req.files
+✔ Allows validation (size, type, count)
+
+
+WHAT MULTER DOES NOT DO
+----------------------
+✘ Upload to Cloudinary / S3
+✘ Resize or compress images
+✘ Store files in DB
+✘ Authenticate users
+
+(Multer only RECEIVES files)
+
+
+WHERE MULTER IS USED
+-------------------
+- Image upload
+- PDF upload
+- Video upload
+- Profile picture
+- Attachments
+- Social media posts
+
+
+TYPICAL FILE UPLOAD FLOW
+-----------------------
+Client (FormData)
+↓
+Multer (req.file / req.files)
+↓
+Cloudinary / S3
+↓
+Save URL in database
+
+
+BASIC SETUP
+-----------
+const upload = multer({ dest: "temp/" });
+
+
+SINGLE FILE UPLOAD
+------------------
+Route:
+upload.single("image")
+
+Result:
+req.file
+
+
+MULTIPLE FILE UPLOAD
+--------------------
+Route:
+upload.array("images", 5)
+
+Result:
+req.files (array)
+
+
+MULTIPLE FIELDS
+---------------
+upload.fields([
+  { name: "avatar", maxCount: 1 },
+  { name: "gallery", maxCount: 5 }
+])
+
+
+FILE VALIDATION
+---------------
+const upload = multer({
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
+  fileFilter: (req, file, cb) => {
+    if (!file.mimetype.startsWith("image/")) {
+      cb(new Error("Only images allowed"));
+    }
+    cb(null, true);
+  }
+});
+
+
+WHERE MULTER SHOULD BE USED
+--------------------------
+✅ In ROUTES
+❌ NOT in controllers
+
+
+CORRECT ROUTE ORDER
+-------------------
+router.post(
+  "/upload",
+  authMiddleware,
+  upload.single("image"),
+  controller
+);
+
+
+COMMON MISTAKES
+---------------
+✘ Expecting req.file without Multer
+✘ Using Multer inside controller
+✘ Forgetting multipart/form-data on frontend
+✘ Uploading files directly to DB
+✘ No file size/type validation
+
+
+INTERVIEW ONE-LINER
+-------------------
+“Multer is Express middleware used to handle
+multipart/form-data requests, mainly for file uploads,
+by parsing files into req.file or req.files.”
+
+
+MENTAL MODEL
+------------
+Multer = file parser
+Cloudinary/S3 = file storage
+Controller = business logic

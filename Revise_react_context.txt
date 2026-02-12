@@ -1,0 +1,251 @@
+=================================================
+REACT CONTEXT – COMPLETE REVISION (TXT NOTES)
+=================================================
+
+-------------------------------------------------
+1. WHAT IS REACT CONTEXT? (DEFINITION)
+-------------------------------------------------
+React Context is a way to share data globally
+across components without passing props manually
+at every level.
+
+In simple terms:
+Context allows you to create global state
+that any component can access.
+
+
+-------------------------------------------------
+2. WHY CONTEXT EXISTS (THE PROBLEM)
+-------------------------------------------------
+Without Context, data must be passed using props
+from parent to child to grandchild.
+
+This is called "prop drilling".
+
+Example problem:
+App → Feed → Post → LikeButton
+If LikeButton needs user data, every component
+above must pass it, even if they don’t need it.
+
+Context solves this problem.
+
+
+-------------------------------------------------
+3. WHEN TO USE CONTEXT
+-------------------------------------------------
+Context is used for global, app-level data.
+
+GOOD use cases:
+- Auth user
+- JWT token
+- Login / logout state
+- Theme (dark/light)
+- Language
+- App settings
+
+BAD use cases:
+- Form inputs
+- Button states
+- Temporary UI data
+- Large frequently changing lists
+
+
+-------------------------------------------------
+4. CORE PARTS OF CONTEXT
+-------------------------------------------------
+React Context has 4 main parts:
+
+1. createContext
+2. Provider
+3. value
+4. useContext
+
+
+-------------------------------------------------
+5. createContext
+-------------------------------------------------
+createContext creates a container for global data.
+
+Example:
+const AppContext = createContext();
+
+This does NOT store data yet.
+It only creates a global storage box.
+
+
+-------------------------------------------------
+6. PROVIDER
+-------------------------------------------------
+A Provider is a component that supplies data
+to all components inside it.
+
+Example:
+<AppContext.Provider value={...}>
+  {children}
+</AppContext.Provider>
+
+Only components wrapped by Provider
+can access the context.
+
+
+-------------------------------------------------
+7. VALUE
+-------------------------------------------------
+value contains the actual data shared globally.
+
+Example:
+value={{
+  user,
+  token,
+  login,
+  logout
+}}
+
+Anything inside value can be accessed
+by any component using the context.
+
+
+-------------------------------------------------
+8. WHY PROVIDER WRAPS THE APP
+-------------------------------------------------
+Provider must wrap the app so that
+all components can access global data.
+
+Example:
+<AppProvider>
+  <App />
+</AppProvider>
+
+Components outside Provider
+CANNOT access context.
+
+
+-------------------------------------------------
+9. useContext
+-------------------------------------------------
+useContext is a hook used to read data
+from Context inside a component.
+
+Example:
+const { user, token } = useContext(AppContext);
+
+This allows the component to consume
+global data.
+
+
+-------------------------------------------------
+10. CUSTOM HOOK (useAppContext)
+-------------------------------------------------
+Instead of writing useContext(AppContext)
+everywhere, we create a custom hook.
+
+Example:
+useAppContext()
+
+Benefits:
+- Cleaner code
+- Easier refactoring
+- Better readability
+
+
+-------------------------------------------------
+11. CONTEXT DATA FLOW
+-------------------------------------------------
+1. Context is created
+2. Provider wraps the app
+3. Provider supplies value
+4. Components read data using useContext
+5. Updating context state re-renders consumers
+
+
+-------------------------------------------------
+12. AUTH CONTEXT EXAMPLE (CONCEPT)
+-------------------------------------------------
+Global data:
+- user
+- token
+- isAuthenticated
+
+Login flow:
+1. User logs in
+2. Backend returns token
+3. login() saves token in context
+4. Navbar updates automatically
+5. Protected pages unlock
+
+
+-------------------------------------------------
+13. WHY CONTEXT AUTO-UPDATES COMPONENTS
+-------------------------------------------------
+Context uses React state internally.
+
+When state changes:
+- Provider re-renders
+- All components using context update
+
+This is React reactivity.
+
+
+-------------------------------------------------
+14. CONTEXT VS PROPS
+-------------------------------------------------
+Props:
+- Passed manually
+- Parent → child
+- Best for local data
+
+Context:
+- Global access
+- No prop drilling
+- Best for shared app data
+
+
+-------------------------------------------------
+15. CONTEXT VS REDUX
+-------------------------------------------------
+Context:
+- Built into React
+- Simple
+- Small to medium apps
+
+Redux:
+- External library
+- Complex but powerful
+- Large-scale apps
+
+Context is NOT Redux replacement.
+
+
+-------------------------------------------------
+16. COMMON MISTAKES
+-------------------------------------------------
+- Putting everything in context
+- Using context for form state
+- Forgetting Provider
+- Mutating context state directly
+- Overusing context
+
+
+-------------------------------------------------
+17. MENTAL MODEL
+-------------------------------------------------
+Context = global brain
+Components = body parts
+
+Brain stores shared information.
+Body parts read from the brain.
+
+
+-------------------------------------------------
+18. INTERVIEW DEFINITION
+-------------------------------------------------
+"React Context provides a way to share
+global data across components without
+prop drilling, making it useful for managing
+application-wide state such as authentication
+and themes."
+
+
+-------------------------------------------------
+END OF FILE
+-------------------------------------------------

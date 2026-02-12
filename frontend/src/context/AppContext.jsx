@@ -12,10 +12,14 @@ import { io } from "socket.io-client";
 export const AppContext = createContext(null);
 
 /* ================= API ================= */
+const API_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 const api = axios.create({
-  baseURL: "http://localhost:5000",
+  baseURL: API_URL,
   withCredentials: true
 });
+
 
 /* ========================================================= */
 
@@ -65,9 +69,11 @@ export const AppProvider = ({ children }) => {
   /* ================= AUTH CHECK ================= */
   useEffect(() => {
     if (isAuthorised && !socket.current) {
-      socket.current = io("http://localhost:5000", {
+      socket.current = io(API_URL, {
         withCredentials: true,
       });
+
+
 
       socket.current.on("connect", () => {
         console.log("Socket connected:", socket.current.id);
