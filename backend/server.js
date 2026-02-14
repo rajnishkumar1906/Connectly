@@ -24,11 +24,16 @@ connectDb();
 
 const app = express();
 
+/* ✅ REQUIRED FOR DEPLOY (cookies + proxy) */
+app.set("trust proxy", 1);
+
 /* ================= MIDDLEWARE ================= */
-const allowedOrigins = [
-  "http://localhost:5173",
-  "http://127.0.0.1:5173",
-];
+
+/* ✅ FIXED CORS */
+const allowedOrigins =
+  process.env.NODE_ENV === "production"
+    ? [process.env.FRONTEND_URL]
+    : ["http://localhost:5173", "http://127.0.0.1:5173"];
 
 app.use(
   cors({
@@ -37,13 +42,14 @@ app.use(
   })
 );
 
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
-/* ✅ ADD THIS (required for avatar/cover) */
-app.use("/temp", express.static("temp"));
+/* ✅ ONLY USE TEMP IN DEV */
+if (process.env.NODE_ENV !== "production") {
+  app.use("/temp", express.static("temp"));
+}
 
 /* ================= ROUTES ================= */
 app.use("/api/users", userRouter);
@@ -51,6 +57,11 @@ app.use("/api/feed", feedRouter);
 app.use("/api/friends", friendsRouter);
 app.use("/api/notifications", notificationRouter);
 app.use("/api/chat", chatRouter);
+
+/* ================= HEALTH CHECK (REQUIRED) ================= */
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "OK" });
+});
 
 /* ================= SOCKET ================= */
 const server = http.createServer(app);
