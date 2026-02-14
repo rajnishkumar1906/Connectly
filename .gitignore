@@ -25,3 +25,9 @@ yarn-error.log*
 # OS files
 .DS_Store
 Thumbs.db
+
+
+Revise_cloudinary_file_upload.txt
+Revise_multer.txt
+Revise_react_context.txt
+Revise_websocket.txt
