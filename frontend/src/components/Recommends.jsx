@@ -27,14 +27,14 @@ const Recommends = () => {
   };
 
   return (
-    <aside className="hidden lg:flex w-80 flex-shrink-0 h-screen bg-black border-l border-gray-800 flex-col overflow-y-auto sticky top-0">
+    <aside className="hidden lg:flex w-80 flex-shrink-0 h-screen bg-white text-gray-900 dark:bg-black dark:text-white border-l border-gray-200 dark:border-gray-800 flex-col overflow-y-auto sticky top-0">
       {/* Search Bar */}
       <div className="p-4 border-b border-gray-800">
         <div className="relative">
           <input
             type="text"
             placeholder="Search"
-            className="w-full bg-gray-900 border border-gray-800 rounded-full px-4 py-2.5 text-sm placeholder-gray-500 focus:outline-none focus:border-gray-600"
+            className="w-full bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-full px-4 py-2.5 text-sm placeholder-gray-500 focus:outline-none focus:border-gray-600"
           />
         </div>
       </div>
@@ -49,10 +49,10 @@ const Recommends = () => {
             { tag: "#Tech", posts: "28.7K" },
             { tag: "#Startup", posts: "21.4K" },
           ].map((trend, index) => (
-            <div key={index} className="p-3 hover:bg-gray-900 rounded-lg cursor-pointer">
-              <div className="text-sm text-gray-400">Trending</div>
-              <div className="font-bold text-white">{trend.tag}</div>
-              <div className="text-sm text-gray-400">{trend.posts} posts</div>
+            <div key={trend.tag} className="p-3 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg cursor-pointer">
+              <div className="text-sm text-gray-500 dark:text-gray-400">Trending</div>
+              <div className="font-bold">{trend.tag}</div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">{trend.posts} posts</div>
             </div>
           ))}
         </div>
@@ -60,15 +60,15 @@ const Recommends = () => {
 
       {/* Who to Follow */}
       <div className="p-4">
-        <h2 className="text-lg font-bold text-white mb-4">Who to follow</h2>
+        <h2 className="text-lg font-bold mb-4">Who to follow</h2>
         <div className="space-y-4">
           {recommendedUsers.length === 0 ? (
             <div className="text-center py-4">
-              <p className="text-gray-400">No suggestions</p>
+              <p className="text-gray-500 dark:text-gray-400">No suggestions</p>
             </div>
           ) : (
             recommendedUsers.map((u) => (
-              <div key={u._id} className="flex items-center justify-between p-2 hover:bg-gray-900 rounded-lg">
+              <div key={u._id} className="flex items-center justify-between p-2 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg">
                 <Link
                   to={`/profile/${u._id}`}
                   className="flex items-center gap-3 flex-1 min-w-0"
@@ -77,13 +77,13 @@ const Recommends = () => {
                     src={u.avatar}
                     fallback={u.username}
                     size="md"
-                    className="border border-gray-700"
+                    className="border border-gray-300 dark:border-gray-700"
                   />
                   <div className="min-w-0 flex-1">
-                    <h3 className="font-semibold text-sm truncate text-white">
+                    <h3 className="font-semibold text-sm truncate">
                       {u.username}
                     </h3>
-                    <p className="text-xs text-gray-400 truncate">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                       Suggested for you
                     </p>
                   </div>
@@ -91,8 +91,8 @@ const Recommends = () => {
 
                 <button
                   className={`px-3 py-1.5 text-sm font-medium rounded-full ${loadingId === u._id
-                      ? "bg-gray-700 text-gray-400 cursor-not-allowed"
-                      : "bg-white text-black hover:bg-gray-200"
+                      ? "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                      : "bg-black text-white dark:bg-white dark:text-black hover:bg-gray-900 dark:hover:bg-gray-200"
                     }`}
                   disabled={loadingId === u._id}
                   onClick={() => handleFollow(u._id)}
@@ -109,12 +109,12 @@ const Recommends = () => {
       <div className="p-4 border-t border-gray-800 mt-auto">
         <div className="text-xs text-gray-500 space-y-2">
           <div className="flex flex-wrap gap-2">
-            <a href="#" className="hover:text-gray-400">Terms</a>
-            <a href="#" className="hover:text-gray-400">Privacy</a>
-            <a href="#" className="hover:text-gray-400">Cookies</a>
-            <a href="#" className="hover:text-gray-400">Accessibility</a>
+            <a href="#" className="hover:text-gray-700 dark:hover:text-gray-400">Terms</a>
+            <a href="#" className="hover:text-gray-700 dark:hover:text-gray-400">Privacy</a>
+            <a href="#" className="hover:text-gray-700 dark:hover:text-gray-400">Cookies</a>
+            <a href="#" className="hover:text-gray-700 dark:hover:text-gray-400">Accessibility</a>
           </div>
-          <div className="text-gray-600">© 2024 Connectly</div>
+          <div className="text-gray-600 dark:text-gray-500">© 2024 Connectly</div>
         </div>
       </div>
     </aside>

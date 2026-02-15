@@ -1,5 +1,8 @@
+import fs from "fs/promises";
+import path from "path";
 import User from "../models/User.js";
 import { Profile } from "../models/Schemas.js";
+import { uploadImage } from "../utils/cloudinary.js";
 
 /* ================= GET USER BY ID ================= */
 export const getUserById = async (req, res) => {
@@ -69,6 +72,9 @@ export const getOwnProfile = async (req, res) => {
 
 /* ================= UPDATE PROFILE ================= */
 export const updateProfile = async (req, res) => {
+  const avatarPath = req.files?.avatar?.[0]?.path;
+  const coverPath = req.files?.cover?.[0]?.path;
+
   try {
     const userId = req.user.userId;
 
@@ -95,23 +101,39 @@ export const updateProfile = async (req, res) => {
       }
     });
 
-    /* ✅ ADD avatar */
-    if (req.files?.avatar?.[0]) {
-      profile.avatar = `/temp/profile/${req.files.avatar[0].filename}`;
+    /* Upload avatar to Cloudinary and save URL in DB */
+    if (avatarPath) {
+      const absPath = path.resolve(avatarPath);
+      try {
+        const result = await uploadImage(absPath);
+        profile.avatar = result.secure_url;
+      } finally {
+        await fs.unlink(absPath).catch(() => {});
+      }
     }
 
-    /* ✅ ADD cover */
-    if (req.files?.cover?.[0]) {
-      profile.coverImage = `/temp/profile/${req.files.cover[0].filename}`;
+    /* Upload cover to Cloudinary and save URL in DB */
+    if (coverPath) {
+      const absPath = path.resolve(coverPath);
+      try {
+        const result = await uploadImage(absPath);
+        profile.coverImage = result.secure_url;
+      } finally {
+        await fs.unlink(absPath).catch(() => {});
+      }
     }
 
     await profile.save();
 
+    const profileObj = profile.toObject ? profile.toObject() : profile;
+
     return res.status(200).json({
       message: "Profile updated successfully",
-      profile,
+      profile: profileObj,
     });
   } catch (error) {
+    if (avatarPath) await fs.unlink(avatarPath).catch(() => {});
+    if (coverPath) await fs.unlink(coverPath).catch(() => {});
     console.error("updateProfile error:", error);
     return res.status(500).json({ message: error.message });
   }

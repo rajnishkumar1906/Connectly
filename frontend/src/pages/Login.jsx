@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { AppContext } from "../context/AppContext";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
@@ -7,6 +7,8 @@ import Input from "../components/ui/Input";
 const Login = () => {
   const { login, signup, loading = false, isAuthorised } = useContext(AppContext);
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from || "/";
 
   const [isSignUp, setIsSignUp] = useState(false);
   const [formData, setFormData] = useState({
@@ -16,8 +18,8 @@ const Login = () => {
   });
 
   useEffect(() => {
-    if (isAuthorised) navigate("/", { replace: true });
-  }, [isAuthorised, navigate]);
+    if (isAuthorised) navigate(from, { replace: true });
+  }, [isAuthorised, navigate, from]);
 
   const handleChange = (e) => {
     setFormData({

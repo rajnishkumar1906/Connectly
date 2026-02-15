@@ -54,9 +54,9 @@ const Home = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-white text-gray-900 dark:bg-black dark:text-white">
         {/* Stories */}
-        <div className="p-4 border-b border-gray-800">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-800">
           <Stories />
         </div>
 
@@ -64,19 +64,19 @@ const Home = () => {
         <div>
           {feed.length === 0 ? (
             <div className="text-center py-12 px-4">
-              <div className="w-16 h-16 bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-800">
-                <Sparkles className="w-8 h-8 text-gray-600" />
+              <div className="w-16 h-16 bg-gray-100 dark:bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-200 dark:border-gray-800">
+                <Sparkles className="w-8 h-8 text-gray-500 dark:text-gray-600" />
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">Welcome!</h3>
-              <p className="text-gray-400 mb-4">Follow people to see posts here.</p>
-              <button className="px-4 py-2 bg-white text-black rounded-lg hover:bg-gray-200">
+              <h3 className="text-lg font-bold mb-2">Welcome!</h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-4">Follow people to see posts here.</p>
+              <button className="px-4 py-2 bg-white text-black rounded-lg hover:bg-gray-200 dark:bg-white dark:text-black">
                 Discover People
               </button>
             </div>
           ) : (
             <div>
               {feed.map((post) => (
-                <div key={post._id} className="border-b border-gray-800">
+                <div key={post._id} className="border-b border-gray-200 dark:border-gray-800">
                   <PostItem
                     post={post}
                     onLike={likePost}

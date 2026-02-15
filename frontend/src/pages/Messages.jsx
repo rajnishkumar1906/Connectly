@@ -91,17 +91,17 @@ const Messages = () => {
   );
 
   return (
-    <div className="flex h-screen bg-gray-950 text-white overflow-hidden">
+    <div className="flex h-screen bg-white text-gray-900 dark:bg-gray-950 dark:text-white overflow-hidden">
 
       {/* ===== LEFT SIDEBAR ===== */}
       <aside
-        className={`w-full md:w-80 bg-gray-900 border-r border-gray-800 flex flex-col
+        className={`w-full md:w-80 bg-gray-100 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col
         ${selectedFriend ? "hidden md:flex" : "flex"}`}
       >
         {/* Header */}
-        <div className="p-4 border-b border-gray-800">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-800">
           <h2 className="text-xl font-bold">Messages</h2>
-          <p className="text-xs text-gray-400">Connectly chat</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Connectly chat</p>
 
           <div className="relative mt-4">
             <Search
@@ -112,7 +112,7 @@ const Messages = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search people"
-              className="pl-10 bg-gray-800 border-gray-700 text-white placeholder-gray-500"
+              className="pl-10"
             />
           </div>
         </div>
@@ -123,13 +123,13 @@ const Messages = () => {
             <button
               key={friend._id}
               onClick={() => setSelectedFriend(friend)}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-left border-b border-gray-800 hover:bg-gray-800
+              className={`w-full flex items-center gap-3 px-4 py-3 text-left border-b border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800
               ${selectedFriend?._id === friend._id ? "bg-gray-800" : ""}`}
             >
               <Avatar fallback={friend.username} size="md" />
               <div className="flex-1 min-w-0">
                 <p className="font-semibold truncate">{friend.username}</p>
-                <p className="text-xs text-gray-400 truncate">
+                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                   Tap to open chat
                 </p>
               </div>
@@ -137,7 +137,7 @@ const Messages = () => {
           ))}
 
           {filteredFriends.length === 0 && (
-            <p className="text-gray-400 text-center mt-10">
+            <p className="text-gray-500 dark:text-gray-400 text-center mt-10">
               No conversations yet
             </p>
           )}
@@ -146,20 +146,20 @@ const Messages = () => {
 
       {/* ===== CHAT AREA ===== */}
       <section
-        className={`flex-1 flex flex-col bg-black
+        className={`flex-1 flex flex-col bg-white dark:bg-black
         ${!selectedFriend ? "hidden md:flex" : "flex"}`}
       >
         {!selectedFriend ? (
           <div className="flex-1 flex flex-col items-center justify-center">
             <h3 className="text-xl font-bold mb-2">Your conversations</h3>
-            <p className="text-gray-400">
+            <p className="text-gray-500 dark:text-gray-400">
               Chat with people you follow on Connectly
             </p>
           </div>
         ) : (
           <>
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800 bg-gradient-to-r from-black to-gray-900">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-800 bg-gradient-to-r from-white to-gray-100 dark:from-black dark:to-gray-900">
               <div className="flex items-center gap-3">
                 <Button
                   variant="ghost"
@@ -172,7 +172,7 @@ const Messages = () => {
                 <Avatar fallback={selectedFriend.username} size="md" />
                 <div>
                   <p className="font-bold">{selectedFriend.username}</p>
-                  <p className="text-xs text-gray-400">Active</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Active</p>
                 </div>
               </div>
 
@@ -196,7 +196,7 @@ const Messages = () => {
                       className={`max-w-[70%] px-3 py-2 rounded-lg text-sm
                       ${isMe
                         ? "bg-blue-500 text-white rounded-br-none"
-                        : "bg-gray-800 text-white rounded-bl-none"
+                        : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-bl-none"
                       }`}
                     >
                       {msg.text}
@@ -210,14 +210,14 @@ const Messages = () => {
             {/* Input */}
             <form
               onSubmit={sendMessage}
-              className="p-4 border-t border-gray-800 bg-gray-950"
+              className="p-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950"
             >
               <div className="flex gap-2">
                 <Input
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   placeholder="Message…"
-                  className="flex-1 bg-gray-800 border-gray-700 text-white placeholder-gray-500"
+                  className="flex-1"
                 />
                 <Button
                   type="submit"

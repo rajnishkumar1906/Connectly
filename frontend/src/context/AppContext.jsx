@@ -45,6 +45,19 @@ export const AppProvider = ({ children }) => {
   /* ================= NOTIFICATIONS ================= */
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [theme, setTheme] = useState(
+    typeof window !== "undefined"
+      ? localStorage.getItem("theme") || "dark"
+      : "dark"
+  );
+
+  /* ================= SERVERS & CHANNELS (Discord-like) ================= */
+  const [myServers, setMyServers] = useState([]);
+  const [currentServer, setCurrentServer] = useState(null);
+  const [channels, setChannels] = useState([]);
+  const [currentChannel, setCurrentChannel] = useState(null);
+  const [channelMessages, setChannelMessages] = useState([]);
+  const [discoverServersList, setDiscoverServersList] = useState([]);
 
   /* ================= HELPERS ================= */
   const handleError = (err, fallback) => {
@@ -64,19 +77,29 @@ export const AppProvider = ({ children }) => {
     setRecommendedUsers([]);
     setNotifications([]);
     setUnreadCount(0);
+    setMyServers([]);
+    setCurrentServer(null);
+    setChannels([]);
+    setCurrentChannel(null);
+    setChannelMessages([]);
+    setDiscoverServersList([]);
   };
 
-  /* ================= AUTH CHECK ================= */
+  /* ================= SOCKET (polling first for Render/proxies, then websocket) ================= */
   useEffect(() => {
     if (isAuthorised && !socket.current) {
       socket.current = io(API_URL, {
         withCredentials: true,
+        transports: ["polling", "websocket"],
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
+        timeout: 10000,
       });
 
-
-
-      socket.current.on("connect", () => {
-        console.log("Socket connected:", socket.current.id);
+      socket.current.on("connect", () => {});
+      socket.current.on("connect_error", () => {
+        // Silent: DMs/communities may work on next reconnect or via polling
       });
     }
 
@@ -87,6 +110,17 @@ export const AppProvider = ({ children }) => {
       }
     };
   }, [isAuthorised]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem("theme", theme);
+    const root = document.documentElement;
+    if (theme === "dark") {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+  }, [theme]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -174,8 +208,11 @@ export const AppProvider = ({ children }) => {
 
   const updateProfile = async (data) => {
     try {
-      const res = await api.patch("/api/users/update-profile", data);
-      setProfile(res.data.profile || res.data);
+      const res = await api.patch("/api/users/update-profile", data, {
+        headers: data instanceof FormData ? {} : { "Content-Type": "application/json" },
+      });
+      const updated = res.data.profile || res.data;
+      setProfile(updated);
       toast.success("Profile updated");
       return true;
     } catch (err) {
@@ -366,13 +403,188 @@ export const AppProvider = ({ children }) => {
     }
   };
 
+  /* ================= COMMUNITIES (servers) ================= */
+  const fetchMyServers = useCallback(async () => {
+    if (!isAuthorised) return;
+    try {
+      const res = await api.get("/api/servers");
+      setMyServers(res.data.servers || []);
+    } catch (err) {
+      if (err?.response?.status === 404) {
+        setMyServers([]);
+        return;
+      }
+      handleError(err, "Failed to load communities");
+      setMyServers([]);
+    }
+  }, [isAuthorised]);
+
+  const createServer = async (data) => {
+    try {
+      const res = await api.post("/api/servers", data);
+      const server = res.data.server;
+      setMyServers(prev => [server, ...prev]);
+      toast.success("Community created");
+      return { success: true, server };
+    } catch (err) {
+      handleError(err, "Failed to create community");
+      return { success: false };
+    }
+  };
+
+  const getServerByInviteCode = async (code) => {
+    try {
+      const res = await api.get(`/api/servers/invite/${code}`);
+      return res.data.server;
+    } catch (err) {
+      handleError(err, "Invalid or expired invite");
+      return null;
+    }
+  };
+
+  const joinServerByInviteCode = async (code) => {
+    try {
+      const res = await api.post(`/api/servers/join/${code}`);
+      const server = res.data.server;
+      if (!res.data.alreadyMember) {
+        setMyServers(prev => [server, ...prev]);
+        toast.success("Joined community");
+      }
+      return { success: true, server };
+    } catch (err) {
+      handleError(err, "Failed to join community");
+      return { success: false };
+    }
+  };
+
+  const leaveServerById = async (serverId) => {
+    try {
+      await api.post(`/api/servers/${serverId}/leave`);
+      setMyServers(prev => prev.filter(s => s._id !== serverId));
+      if (currentServer?._id === serverId) {
+        setCurrentServer(null);
+        setChannels([]);
+        setCurrentChannel(null);
+        setChannelMessages([]);
+      }
+      toast.success("Left community");
+    } catch (err) {
+      handleError(err, "Failed to leave community");
+    }
+  };
+
+  const updateServerById = async (serverId, data) => {
+    try {
+      const res = await api.patch(`/api/servers/${serverId}`, data);
+      const updated = res.data.server;
+      setMyServers(prev =>
+        prev.map(s => (s._id === serverId ? { ...s, ...updated } : s))
+      );
+      if (currentServer?._id === serverId) setCurrentServer(prev => (prev ? { ...prev, ...updated } : null));
+      toast.success("Community updated");
+      return true;
+    } catch (err) {
+      handleError(err, "Failed to update community");
+      return false;
+    }
+  };
+
+  const fetchServerMembers = async (serverId) => {
+    try {
+      const res = await api.get(`/api/servers/${serverId}/members`);
+      return res.data.members || [];
+    } catch (err) {
+      handleError(err, "Failed to load members");
+      return [];
+    }
+  };
+
+  const fetchDiscoverServers = async (category) => {
+    try {
+      const url = category ? `/api/servers/discover?category=${encodeURIComponent(category)}` : "/api/servers/discover";
+      const res = await api.get(url);
+      setDiscoverServersList(res.data.servers || []);
+      return res.data.servers || [];
+    } catch (err) {
+      handleError(err, "Failed to discover servers");
+      setDiscoverServersList([]);
+      return [];
+    }
+  };
+
+  /* ================= CHANNELS ================= */
+  const fetchChannels = useCallback(async (serverId) => {
+    if (!serverId) return;
+    try {
+      const res = await api.get(`/api/channels/server/${serverId}`);
+      setChannels(res.data.channels || []);
+      return res.data.channels || [];
+    } catch (err) {
+      handleError(err, "Failed to load channels");
+      setChannels([]);
+      return [];
+    }
+  }, []);
+
+  const createChannel = async (serverId, data) => {
+    try {
+      const res = await api.post(`/api/channels/server/${serverId}`, data);
+      const channel = res.data.channel;
+      setChannels(prev => [...prev, channel]);
+      toast.success("Channel created");
+      return { success: true, channel };
+    } catch (err) {
+      handleError(err, "Failed to create channel");
+      return { success: false };
+    }
+  };
+
+  const fetchChannelMessages = useCallback(async (channelId, page = 1) => {
+    if (!channelId) return;
+    try {
+      const res = await api.get(`/api/channels/${channelId}/messages?page=${page}&limit=50`);
+      const list = res.data.messages || [];
+      if (page === 1) setChannelMessages(list);
+      else setChannelMessages(prev => [...list, ...prev]);
+      return list;
+    } catch (err) {
+      handleError(err, "Failed to load messages");
+      setChannelMessages([]);
+      return [];
+    }
+  }, []);
+
+  const sendChannelMessage = (channelId, text) => {
+    if (!channelId || !text?.trim() || !user || !socket.current) return;
+    const senderId = user._id ?? user.userId;
+    if (!senderId) return;
+    socket.current.emit("sendChannelMessage", {
+      channelId,
+      sender: senderId,
+      text: text.trim(),
+    });
+  };
+
+  const joinChannelRoom = (channelId) => {
+    if (channelId && socket.current) socket.current.emit("joinChannel", channelId);
+  };
+
+  const leaveChannelRoom = (channelId) => {
+    if (channelId && socket.current) socket.current.emit("leaveChannel", channelId);
+  };
+
+  const appendChannelMessage = (msg) => {
+    setChannelMessages(prev => [...prev, msg]);
+  };
+
   /* ================= GLOBAL REFRESH ================= */
   const refreshAll = async () => {
     await Promise.allSettled([
       fetchOwnProfile(),
       fetchFriends(),
       fetchRecommendedUsers(),
-      fetchNotifications()
+      fetchNotifications(),
+      fetchMyServers()
     ]);
   };
 
@@ -395,10 +607,38 @@ export const AppProvider = ({ children }) => {
 
         notifications,
         unreadCount,
+        theme,
+
+        myServers,
+        currentServer,
+        setCurrentServer,
+        channels,
+        currentChannel,
+        setCurrentChannel,
+        channelMessages,
+        discoverServersList,
+        setChannelMessages,
 
         login,
         signup,
         logout,
+
+        fetchMyServers,
+        createServer,
+        getServerByInviteCode,
+        joinServerByInviteCode,
+        leaveServerById,
+        updateServerById,
+        fetchServerMembers,
+        fetchDiscoverServers,
+
+        fetchChannels,
+        createChannel,
+        fetchChannelMessages,
+        sendChannelMessage,
+        joinChannelRoom,
+        leaveChannelRoom,
+        appendChannelMessage,
 
         fetchFeed,
         likePost,
@@ -420,7 +660,8 @@ export const AppProvider = ({ children }) => {
 
         fetchRecommendedUsers,
         fetchNotifications,
-        markNotificationRead
+        markNotificationRead,
+        setTheme
       }}
     >
       {children}

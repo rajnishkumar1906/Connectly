@@ -20,7 +20,7 @@ const Avatar = ({ src, alt, fallback, size = "md", className = "" }) => {
 
   return (
     <div
-      className={`relative inline-block rounded-full overflow-hidden bg-gray-100 border border-gray-200 ${sizes[size]} ${className}`}
+      className={`relative inline-block rounded-full overflow-hidden bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 ${sizes[size]} ${className}`}
     >
       <img
         src={imageSrc}

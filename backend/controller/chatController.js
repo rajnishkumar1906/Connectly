@@ -14,7 +14,7 @@ export const getChatMessages = async (req, res) => {
 export const sendMessage = async (req, res) => {
   try {
     const { receiverId, text } = req.body;
-    const sender = req.user._id;
+    const sender = req.user.userId;
 
     const chatId =
       sender < receiverId

@@ -66,7 +66,8 @@ const Profile = () => {
     state: "",
     website: "",
     occupation: "",
-    education: ""
+    education: "",
+    phoneNo: ""
   });
 
   const [avatarFile, setAvatarFile] = useState(null);
@@ -138,7 +139,8 @@ const Profile = () => {
       state: profileData?.state || "",
       website: profileData?.website || "",
       occupation: profileData?.occupation || "",
-      education: profileData?.education || ""
+      education: profileData?.education || "",
+      phoneNo: profileData?.phoneNo || ""
     });
     setIsEditing(true);
   };
@@ -147,18 +149,16 @@ const Profile = () => {
     setUploading(true);
     try {
       const formData = new FormData();
-      
-      Object.keys(form).forEach(key => {
-        if (form[key]) formData.append(key, form[key]);
+      Object.keys(form).forEach((key) => {
+        if (form[key] != null && form[key] !== "") formData.append(key, form[key]);
       });
-      
       if (avatarFile) formData.append("avatar", avatarFile);
       if (coverFile) formData.append("cover", coverFile);
-      
+
       const success = await updateProfile(formData);
       if (success) {
         const refreshed = await fetchUserProfile(profileUserId);
-        setProfileData(refreshed.profile);
+        if (refreshed?.profile) setProfileData(refreshed.profile);
         setAvatarFile(null);
         setCoverFile(null);
         setIsEditing(false);
@@ -169,6 +169,9 @@ const Profile = () => {
       setUploading(false);
     }
   };
+
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  const imageUrl = (url) => (url?.startsWith("http") ? url : url ? `${API_URL}${url}` : null);
 
   if (loading) {
     return (
@@ -191,9 +194,9 @@ const Profile = () => {
 
   /* ================= UI ================= */
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-white text-gray-900 dark:bg-black dark:text-white">
       {/* HEADER */}
-      <div className="sticky top-0 z-10 bg-black/95 backdrop-blur border-b border-gray-800 px-4 py-3">
+      <div className="sticky top-0 z-10 bg-white/95 dark:bg-black/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 px-4 py-3">
         <div className="flex items-center">
           <button onClick={() => navigate(-1)} className="mr-4">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -202,7 +205,7 @@ const Profile = () => {
           </button>
           <div>
             <h1 className="font-bold text-lg">{displayName}</h1>
-            <p className="text-sm text-gray-400">{posts.length} posts</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{posts.length} posts</p>
           </div>
         </div>
       </div>
@@ -210,9 +213,9 @@ const Profile = () => {
       {/* COVER PHOTO */}
       <div className="relative h-48 bg-gray-900 overflow-hidden">
         {(coverFile || profileData?.coverImage) && (
-          <img 
-            src={coverFile ? URL.createObjectURL(coverFile) : profileData.coverImage} 
-            alt="Cover" 
+          <img
+            src={coverFile ? URL.createObjectURL(coverFile) : imageUrl(profileData.coverImage) || profileData.coverImage}
+            alt="Cover"
             className="w-full h-full object-cover"
           />
         )}
@@ -232,7 +235,7 @@ const Profile = () => {
         <div className="flex justify-between items-end mb-4">
           <div className="relative">
             <Avatar
-              src={avatarFile ? URL.createObjectURL(avatarFile) : profileData?.avatar}
+              src={avatarFile ? URL.createObjectURL(avatarFile) : imageUrl(profileData?.avatar) || profileData?.avatar}
               fallback={displayName}
               size="3xl"
               className="border-4 border-black"
@@ -309,10 +312,21 @@ const Profile = () => {
             </div>
           )}
           {profileData?.website && (
-            <a href={profileData.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-blue-400 hover:underline">
+            <a href={profileData.website.startsWith("http") ? profileData.website : `https://${profileData.website}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-blue-400 hover:underline">
               <LinkIcon size={14} />
-              <span>{profileData.website.replace(/^https?:\/\//, '')}</span>
+              <span>{profileData.website.replace(/^https?:\/\//, "")}</span>
             </a>
+          )}
+          {profileData?.phoneNo && (
+            <div className="flex items-center gap-2">
+              <span>{profileData.phoneNo}</span>
+            </div>
+          )}
+          {profileData?.education && (
+            <div className="flex items-center gap-2">
+              <GraduationCap size={14} />
+              <span>{profileData.education}</span>
+            </div>
           )}
           {joinDate && (
             <div className="flex items-center gap-2">
@@ -358,7 +372,7 @@ const Profile = () => {
           </button>
           <button
             onClick={() => setActiveTab("likes")}
-            className={`flex-1 py-4 font-medium text-sm ${activeTab === "likes" ? "text-white border-b-2 border-white" : "text-gray"}`}
+            className={`flex-1 py-4 font-medium text-sm ${activeTab === "likes" ? "text-black border-b-2 border-black dark:text-white dark:border-white" : "text-gray-500 dark:text-gray-400"}`}
           >
             Likes
           </button>
@@ -370,21 +384,21 @@ const Profile = () => {
         {activeTab === "posts" && (
           posts.length === 0 ? (
             <div className="text-center py-12 px-4">
-              <div className="w-16 h-16 bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-gray-100 dark:bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg className="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">
+              <h3 className="text-xl font-bold mb-2">
                 {isOwnProfile ? "No posts yet" : "No posts"}
               </h3>
-              <p className="text-gray-400 mb-6">
+              <p className="text-gray-500 dark:text-gray-400 mb-6">
                 {isOwnProfile ? "When you post something, it will show up here." : "When they post, it will show up here."}
               </p>
               {isOwnProfile && (
                 <Button
                   onClick={() => navigate("/")}
-                  className="bg-white text-black hover:bg-gray-200"
+                  className="bg-black text-white dark:bg-white dark:text-black hover:bg-gray-900 dark:hover:bg-gray-200"
                 >
                   Create your first post
                 </Button>
@@ -393,7 +407,7 @@ const Profile = () => {
           ) : (
             <div>
               {posts.map(post => (
-                <div key={post._id} className="border-b border-gray-800">
+                <div key={post._id} className="border-b border-gray-200 dark:border-gray-800">
                   <PostItem
                     post={{ ...post, user: profileUser }}
                     onLike={likePost}
@@ -410,11 +424,11 @@ const Profile = () => {
           <div className="p-4">
             {followers.length === 0 ? (
               <div className="text-center py-12">
-                <div className="w-16 h-16 bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-gray-100 dark:bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Users className="w-8 h-8 text-gray-600" />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">No followers yet</h3>
-                <p className="text-gray-400">
+                <h3 className="text-xl font-bold mb-2">No followers yet</h3>
+                <p className="text-gray-500 dark:text-gray-400">
                   {isOwnProfile ? "When someone follows you, they'll show up here." : "No followers yet"}
                 </p>
               </div>
@@ -424,13 +438,13 @@ const Profile = () => {
                   <div 
                     key={user._id}
                     onClick={() => navigate(`/profile/${user._id}`)}
-                    className="flex items-center justify-between p-3 hover:bg-gray-900 rounded-lg cursor-pointer"
+                    className="flex items-center justify-between p-3 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
                       <Avatar fallback={user.username} src={user.avatar} size="md" />
                       <div>
-                        <h4 className="font-medium text-white">{user.username}</h4>
-                        <p className="text-sm text-gray-400">{user.bio || "No bio"}</p>
+                        <h4 className="font-medium">{user.username}</h4>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{user.bio || "No bio"}</p>
                       </div>
                     </div>
                     {!isOwnProfile && (
@@ -472,7 +486,7 @@ const Profile = () => {
                         <p className="text-sm text-gray-400">{user.bio || "No bio"}</p>
                       </div>
                     </div>
-                    <Button size="sm" className="border border-gray-700 bg-transparent hover:bg-gray-800 text-xs">
+                    <Button size="sm" className="border border-gray-300 dark:border-gray-700 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 text-xs">
                       Following
                     </Button>
                   </div>
@@ -483,12 +497,12 @@ const Profile = () => {
         )}
 
         {activeTab === "likes" && (
-          <div className="text-center py-12 px-4">
-            <div className="w-16 h-16 bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="text-center py-12 px-4">
+              <div className="w-16 h-16 bg-gray-100 dark:bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4">
               <Heart className="w-8 h-8 text-gray-600" />
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">No likes yet</h3>
-            <p className="text-gray-400">
+              <h3 className="text-xl font-bold mb-2">No likes yet</h3>
+              <p className="text-gray-500 dark:text-gray-400">
               {isOwnProfile ? "Posts you've liked will appear here." : "Liked posts will appear here."}
             </p>
           </div>
@@ -498,10 +512,10 @@ const Profile = () => {
       {/* EDIT MODAL */}
       {isEditing && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-900 rounded-lg w-full max-w-md border border-gray-800">
-            <div className="flex items-center justify-between p-4 border-b border-gray-800">
-              <h2 className="text-lg font-bold text-white">Edit Profile</h2>
-              <button onClick={() => !uploading && setIsEditing(false)} className="text-gray-400 hover:text-white">
+          <div className="bg-white dark:bg-gray-900 rounded-lg w-full max-w-md border border-gray-200 dark:border-gray-800">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800">
+              <h2 className="text-lg font-bold">Edit Profile</h2>
+              <button onClick={() => !uploading && setIsEditing(false)} className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white">
                 <X size={20} />
               </button>
             </div>
@@ -510,63 +524,65 @@ const Profile = () => {
               {[
                 { key: "firstName", label: "First Name" },
                 { key: "lastName", label: "Last Name" },
+                { key: "phoneNo", label: "Phone" },
                 { key: "city", label: "City" },
                 { key: "state", label: "State" },
                 { key: "occupation", label: "Occupation" },
+                { key: "education", label: "Education" },
                 { key: "website", label: "Website" },
-              ].map(field => (
+              ].map((field) => (
                 <div key={field.key}>
-                  <label className="block text-sm text-gray-400 mb-1">{field.label}</label>
+                  <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">{field.label}</label>
                   <input
                     value={form[field.key]}
                     onChange={e => setForm({ ...form, [field.key]: e.target.value })}
-                    className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white"
+                    className="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded px-3 py-2"
                   />
                 </div>
               ))}
 
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Bio</label>
+                <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">Bio</label>
                 <textarea
                   value={form.bio}
                   onChange={e => setForm({ ...form, bio: e.target.value })}
                   rows={3}
-                  className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white resize-none"
+                  className="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded px-3 py-2 resize-none"
                 />
               </div>
 
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Profile Picture</label>
+                  <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">Profile Picture</label>
                   <input
                     type="file"
                     accept="image/*"
                     onChange={e => e.target.files[0] && setAvatarFile(e.target.files[0])}
-                    className="w-full text-sm text-gray-400"
+                    className="w-full text-sm text-gray-500 dark:text-gray-400"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Cover Photo</label>
+                  <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">Cover Photo</label>
                   <input
                     type="file"
                     accept="image/*"
                     onChange={e => e.target.files[0] && setCoverFile(e.target.files[0])}
-                    className="w-full text-sm text-gray-400"
+                    className="w-full text-sm text-gray-500 dark:text-gray-400"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="p-4 border-t border-gray-800 flex justify-end gap-3">
+            <div className="p-4 border-t border-gray-200 dark:border-gray-800 flex justify-end gap-3">
               <Button
                 variant="secondary"
                 onClick={() => setIsEditing(false)}
                 disabled={uploading}
-                className="border border-gray-700 bg-transparent"
+                className="border border-gray-300 dark:border-gray-700 bg-transparent"
               >
                 Cancel
               </Button>
-              <Button onClick={saveProfile} disabled={uploading} className="bg-white text-black hover:bg-gray-200">
+              <Button onClick={saveProfile} disabled={uploading} className="bg-black text-white dark:bg-white dark:text-black hover:bg-gray-900 dark:hover:bg-gray-200">
                 {uploading ? "Saving..." : "Save"}
               </Button>
             </div>

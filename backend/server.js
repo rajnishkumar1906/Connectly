@@ -13,8 +13,11 @@ import feedRouter from "./router/feedRouter.js";
 import friendsRouter from "./router/friendsRouter.js";
 import notificationRouter from "./router/notificationRouter.js";
 import chatRouter from "./router/chatRouter.js";
+import serverRouter from "./router/serverRouter.js";
+import channelRouter from "./router/channelRouter.js";
 
 import chatSocket from "./socket/chatSocket.js";
+import channelSocket from "./socket/channelSocket.js";
 
 dotenv.config();
 
@@ -32,7 +35,7 @@ app.set("trust proxy", 1);
 const allowedOrigins = [
   "http://localhost:5173",
   "http://127.0.0.1:5173",
-  process.env.FRONTEND_URL,
+  ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(",").map((u) => u.trim()).filter(Boolean) : []),
 ];
 
 app.use(
@@ -67,6 +70,8 @@ app.use("/api/feed", feedRouter);
 app.use("/api/friends", friendsRouter);
 app.use("/api/notifications", notificationRouter);
 app.use("/api/chat", chatRouter);
+app.use("/api/servers", serverRouter);
+app.use("/api/channels", channelRouter);
 
 /* ================= HEALTH CHECK (REQUIRED) ================= */
 app.get("/health", (req, res) => {
@@ -78,12 +83,15 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: allowedOrigins,
+    origin: allowedOrigins.length ? allowedOrigins : true,
     credentials: true,
+    methods: ["GET", "POST"],
   },
+  transports: ["polling", "websocket"],
 });
 
 chatSocket(io);
+channelSocket(io);
 
 /* ================= START SERVER ================= */
 const PORT = process.env.PORT || 5000;

@@ -28,17 +28,17 @@ const MainLayout = () => {
   };
 
   return (
-    <div className="h-screen bg-black text-white overflow-hidden">
+    <div className="h-screen bg-white text-gray-900 dark:bg-black dark:text-white overflow-hidden">
       
       {/* Mobile Top Bar */}
-      <div className="lg:hidden flex items-center gap-4 px-4 py-3 border-b border-gray-800">
+      <div className="lg:hidden flex items-center gap-4 px-4 py-3 border-b border-gray-200 dark:border-gray-800">
         <button onClick={() => setIsNavOpen(true)}>
-          <Menu className="w-6 h-6 text-white" />
+          <Menu className="w-6 h-6" />
         </button>
         <span className="font-bold text-lg">Connectly</span>
       </div>
 
-      <div className="flex h-[calc(100%-56px)] lg:h-full">
+      <div className="flex h-[calc(100%-56px)] lg:h	full">
 
         {/* SideNav */}
         <SideNav
@@ -51,7 +51,7 @@ const MainLayout = () => {
         />
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto border-x border-gray-800">
+        <main className="flex-1 overflow-y-auto border-x border-gray-200 dark:border-gray-800">
           <Outlet />
         </main>
 

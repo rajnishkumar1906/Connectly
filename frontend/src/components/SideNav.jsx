@@ -9,12 +9,14 @@ import {
   Settings,
   PlusSquare,
   Compass,
+  Users,
   X
 } from "lucide-react";
 
 import { AppContext } from "../context/AppContext";
 import Avatar from "./ui/Avatar";
 import Button from "./ui/Button";
+import ConfirmLogoutModal from "./ConfirmLogoutModal";
 
 const SideNav = ({ isOpen = false, onClose = () => {}, onOpenCreate }) => {
   const location = useLocation();
@@ -28,13 +30,19 @@ const SideNav = ({ isOpen = false, onClose = () => {}, onOpenCreate }) => {
     onClose();
   }, [location.pathname]);
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
+    setShowLogout(true);
+  };
+
+  const confirmLogout = async () => {
+    setShowLogout(false);
     await logout();
     navigate("/login", { replace: true });
   };
 
   const navItems = [
     { label: "Home", path: "/", icon: Home },
+    { label: "Communities", path: "/servers", icon: Users },
     { label: "Messages", path: "/messages", icon: MessageCircle },
     { label: "Discover", path: "/discover", icon: Compass },
     { label: "Create", isCreate: true, icon: PlusSquare },
@@ -60,14 +68,15 @@ const SideNav = ({ isOpen = false, onClose = () => {}, onOpenCreate }) => {
         className={`
           fixed lg:static z-50
           top-0 left-0 h-full
-          w-64 bg-black border-r border-gray-800
+          w-64 bg-white text-gray-900 dark:bg-black dark:text-white border-r border-gray-200 dark:border-gray-800
           transform transition-transform duration-300
           ${isOpen ? "translate-x-0" : "-translate-x-full"}
           lg:translate-x-0
+          flex flex-col
         `}
       >
         {/* Header */}
-        <div className="p-4 border-b border-gray-800 flex justify-between items-center">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center">
           <Link to="/" className="text-xl font-bold">Connectly</Link>
           <button className="lg:hidden" onClick={onClose}>
             <X />
@@ -81,7 +90,7 @@ const SideNav = ({ isOpen = false, onClose = () => {}, onOpenCreate }) => {
               <button
                 key={label}
                 onClick={onOpenCreate}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-900"
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-500 hover:text-black hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-900"
               >
                 <Icon size={22} /> {label}
               </button>
@@ -91,14 +100,14 @@ const SideNav = ({ isOpen = false, onClose = () => {}, onOpenCreate }) => {
                 to={path}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg ${
                   isActive(path)
-                    ? "bg-white text-black"
-                    : "text-gray-400 hover:text-white hover:bg-gray-900"
+                    ? "bg-black text-white dark:bg-white dark:text-black"
+                    : "text-gray-500 hover:text-black hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-900"
                 }`}
               >
                 <Icon size={22} />
                 {label}
                 {label === "Notifications" && unreadCount > 0 && (
-                  <span className="ml-auto bg-white text-black text-xs px-2 rounded-full">
+                  <span className="ml-auto bg-black text-white dark:bg-white dark:text-black text-xs px-2 rounded-full">
                     {unreadCount}
                   </span>
                 )}
@@ -109,7 +118,7 @@ const SideNav = ({ isOpen = false, onClose = () => {}, onOpenCreate }) => {
 
         {/* User */}
         {user && (
-          <div className="p-4 border-t border-gray-800">
+          <div className="p-4 border-t border-gray-200 dark:border-gray-800">
             <div className="flex items-center gap-3">
               <Avatar fallback={user.username} />
               <span className="flex-1 truncate">{user.username}</span>
@@ -120,6 +129,11 @@ const SideNav = ({ isOpen = false, onClose = () => {}, onOpenCreate }) => {
           </div>
         )}
       </aside>
+      <ConfirmLogoutModal
+        isOpen={showLogout}
+        onClose={() => setShowLogout(false)}
+        onConfirm={confirmLogout}
+      />
     </>
   );
 };

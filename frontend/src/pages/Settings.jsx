@@ -1,11 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { Link } from "react-router-dom";
 import { ChevronLeft, Shield, Bell, UserCog } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
 import Switch from "../components/ui/Switch";
 import Button from "../components/ui/Button";
+import { AppContext } from "../context/AppContext";
 
 const Settings = () => {
+  const { theme, setTheme } = useContext(AppContext);
   const [notifications, setNotifications] = useState({
     likes: true,
     comments: true,
@@ -30,8 +32,6 @@ const Settings = () => {
 
   const handleSave = (e) => {
     e.preventDefault();
-    console.log("Settings saved:", { notifications, privacy });
-    // Here you would typically call an API to save settings
   };
 
   // Helper component for settings row
@@ -48,31 +48,53 @@ const Settings = () => {
   );
 
   return (
-    <div className="w-full pb-8">
+    <div className="w-full pb-8 bg-white text-gray-900 dark:bg-black dark:text-white">
       <div className="max-w-3xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
           <Link
             to="/profile"
-            className="p-2 -ml-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-2 -ml-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-900 rounded-full transition-colors"
           >
             <ChevronLeft size={24} />
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             Settings
           </h1>
         </div>
 
         <form onSubmit={handleSave} className="space-y-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center gap-3">
+              <div className="p-2 bg-gray-100 rounded-lg text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                <span>🌓</span>
+              </div>
+              <CardTitle>Appearance</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between py-4">
+                <div className="flex-1 pr-4">
+                  <h4 className="text-sm font-medium text-gray-900 dark:text-white">Dark Mode</h4>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Switch between light and dark themes</p>
+                </div>
+                <div className="flex-shrink-0">
+                  <Switch
+                    checked={theme === "dark"}
+                    onChange={() => setTheme(theme === "dark" ? "light" : "dark")}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
           {/* Notifications */}
           <Card>
             <CardHeader className="flex flex-row items-center gap-3">
-              <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
+              <div className="p-2 bg-blue-50 rounded-lg text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
                 <Bell size={20} />
               </div>
               <CardTitle>Notifications</CardTitle>
             </CardHeader>
-            <CardContent className="divide-y divide-gray-100">
+            <CardContent className="divide-y divide-gray-100 dark:divide-gray-800">
               <SettingRow
                 label="Likes"
                 description="Notify when someone likes your post"
@@ -124,12 +146,12 @@ const Settings = () => {
           {/* Privacy */}
           <Card>
             <CardHeader className="flex flex-row items-center gap-3">
-              <div className="p-2 bg-green-50 rounded-lg text-green-600">
+              <div className="p-2 bg-green-50 rounded-lg text-green-600 dark:bg-green-900/30 dark:text-green-400">
                 <Shield size={20} />
               </div>
               <CardTitle>Privacy & Security</CardTitle>
             </CardHeader>
-            <CardContent className="divide-y divide-gray-100">
+            <CardContent className="divide-y divide-gray-100 dark:divide-gray-800">
               <SettingRow
                 label="Private Account"
                 description="Only approved followers can see your posts"
@@ -161,7 +183,6 @@ const Settings = () => {
               <div className="py-4">
                 <Button 
                   variant="outline" 
-                  onClick={() => console.log("Change password")}
                   className="w-full sm:w-auto"
                 >
                   Change Password
@@ -173,7 +194,7 @@ const Settings = () => {
           {/* Account */}
           <Card>
             <CardHeader className="flex flex-row items-center gap-3">
-              <div className="p-2 bg-purple-50 rounded-lg text-purple-600">
+              <div className="p-2 bg-purple-50 rounded-lg text-purple-600 dark:bg-purple-900/30 dark:text-purple-400">
                 <UserCog size={20} />
               </div>
               <CardTitle>Account Actions</CardTitle>
@@ -181,8 +202,8 @@ const Settings = () => {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between py-2">
                 <div>
-                  <h4 className="text-sm font-medium text-gray-900">Download Your Data</h4>
-                  <p className="text-sm text-gray-500">Request a copy of your information</p>
+                  <h4 className="text-sm font-medium text-gray-900 dark:text-white">Download Your Data</h4>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Request a copy of your information</p>
                 </div>
                 <Button variant="outline" size="sm">
                   Request
@@ -191,8 +212,8 @@ const Settings = () => {
               
               <div className="flex items-center justify-between py-2">
                 <div>
-                  <h4 className="text-sm font-medium text-gray-900">Temporarily Disable</h4>
-                  <p className="text-sm text-gray-500">Take a break from the platform</p>
+                  <h4 className="text-sm font-medium text-gray-900 dark:text-white">Temporarily Disable</h4>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Take a break from the platform</p>
                 </div>
                 <Button variant="outline" size="sm" className="text-amber-600 hover:text-amber-700 hover:bg-amber-50 border-amber-200">
                   Disable
@@ -202,7 +223,7 @@ const Settings = () => {
               <div className="flex items-center justify-between py-2">
                 <div>
                   <h4 className="text-sm font-medium text-red-600">Delete Account</h4>
-                  <p className="text-sm text-gray-500">Permanently delete your account</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Permanently delete your account</p>
                 </div>
                 <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200">
                   Delete

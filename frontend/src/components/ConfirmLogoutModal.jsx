@@ -13,19 +13,19 @@ const ConfirmLogoutModal = ({ isOpen, onClose, onConfirm }) => {
       />
 
       {/* Card */}
-      <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 z-10">
-        <h2 className="text-xl font-bold text-gray-900 mb-2">
+      <div className="relative bg-white dark:bg-gray-900 rounded-xl shadow-2xl w-full max-w-sm p-6 z-10">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
           Log out?
         </h2>
 
-        <p className="text-gray-600 mb-6">
+        <p className="text-gray-600 dark:text-gray-400 mb-6">
           Are you sure you want to log out of your account?
         </p>
 
         <div className="flex justify-end gap-3">
           <Button
             onClick={onClose}
-            className="bg-gray-200 text-gray-900 hover:bg-gray-300"
+            className="bg-gray-200 text-gray-900 hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
           >
             Cancel
           </Button>
