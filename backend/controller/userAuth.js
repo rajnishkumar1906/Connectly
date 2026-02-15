@@ -2,6 +2,12 @@ import User from "../models/User.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
+const cookieOptions = {
+  httpOnly: true,
+  secure: true,        // REQUIRED on Render
+  sameSite: "none",    // REQUIRED for Vercel ↔ Render
+};
+
 /* ================= SIGN UP ================= */
 export const signUp = async (req, res) => {
   const { username, email, password } = req.body;
@@ -25,12 +31,7 @@ export const signUp = async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: true,       // REQUIRED (Render uses HTTPS)
-      sameSite: "none",   // REQUIRED (cross-site cookies)
-    });
-
+    res.cookie("token", token, cookieOptions);
 
     res.status(201).json({
       user: { _id: user._id, username: user.username, email: user.email },
@@ -61,10 +62,7 @@ export const login = async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      sameSite: "lax",
-    });
+    res.cookie("token", token, cookieOptions);
 
     res.status(200).json({
       user: { _id: user._id, username: user.username, email: user.email },
@@ -91,10 +89,7 @@ export const getMe = async (req, res) => {
 
 /* ================= LOGOUT ================= */
 export const logout = (req, res) => {
-  res.clearCookie("token", {
-    secure: true,
-    sameSite: "none",
-  });
+  res.clearCookie("token", cookieOptions);
 
   res.status(200).json({ message: "Logged out successfully" });
 };
