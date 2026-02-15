@@ -33,7 +33,7 @@ const profileUpload = createUploader("profile");
 router.get("/me", authMiddleware, getMe);
 router.post("/login", login);
 router.post("/signup", signUp);
-router.post("/logout", authMiddleware, logout);
+router.post("/logout", logout);
 
 /* ================= PROFILE ================= */
 router.get("/retrieve-profile", authMiddleware, getOwnProfile);
