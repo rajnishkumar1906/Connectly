@@ -1,10 +1,11 @@
-
 # 🌐 Connectly
 
 **Connectly** is a modern full-stack social media platform built with the **MERN stack**.  
 It allows users to connect, share posts, follow others, and communicate via **real-time chat**.
 
-This project is designed as a **portfolio-grade, real-world application**, demonstrating scalable backend architecture, clean frontend state management, and hybrid **REST + WebSocket** communication.
+Live Demo: https://connectly-lovat.vercel.app/
+
+This project demonstrates scalable backend architecture, clean frontend state management, and hybrid **REST + WebSocket** communication — perfect for portfolio showcase.
 
 ---
 
@@ -18,7 +19,7 @@ This project is designed as a **portfolio-grade, real-world application**, demon
 
 ### 👤 User Profiles
 - Editable profile (first name, last name, bio, city, state, phone)
-- Profile picture support
+- Profile picture support (Cloudinary)
 - Follower & following counts
 - View own profile & other users’ profiles
 - Follow / unfollow system
@@ -28,7 +29,7 @@ This project is designed as a **portfolio-grade, real-world application**, demon
 - Image uploads using **Multer + Cloudinary**
 - Like posts
 - Comment on posts
-- View feed from followed users
+- Feed from followed users
 - User-specific post feeds
 
 ### 🤝 Social Graph
@@ -42,35 +43,34 @@ This project is designed as a **portfolio-grade, real-world application**, demon
 - Chat rooms stored in MongoDB
 - Message history via REST
 - **Real-time messaging using WebSockets (Socket.IO)**
-- Instant message delivery without refresh
+- Instant message delivery
 
 ### 🔔 Notifications
 - Follow notifications
-- Read / unread notification state
-- Notification count tracking
+- Read / unread status
+- Notification count
 
 ### 📱 UI / UX
 - Responsive design (desktop & mobile)
-- Clean UI using **Tailwind CSS**
-- Modal-based create post
-- Tab-based profile sections
-- Instagram / Twitter-like layout
+- Clean UI with **Tailwind CSS**
+- Modal-based post creation
+- Tabbed profile sections
+- Instagram/Twitter-inspired layout
 
 ---
 
 ## ⚡ Real-Time Architecture
 
-Connectly uses a **hybrid communication model**:
+Hybrid communication model:
 
-| Feature                  | Technology          |
-|--------------------------|---------------------|
-| Auth, Profile, Feed      | REST (Axios)        |
-| Load chat history        | REST                |
-| Live chat messages       | WebSocket (Socket.IO) |
-| Notifications (future)   | WebSocket           |
-| Page refresh fallback    | REST                |
+| Feature                | Technology           |
+|------------------------|----------------------|
+| Auth, Profile, Feed    | REST (Axios)         |
+| Load chat history      | REST                 |
+| Live chat messages     | WebSocket (Socket.IO)|
+| Notifications (future) | WebSocket            |
 
-This approach ensures scalability, reliability, low latency for chat, and safe data persistence.
+Ensures scalability, reliability, and low-latency chat.
 
 ---
 
@@ -94,7 +94,6 @@ This approach ensures scalability, reliability, low latency for chat, and safe d
 - **Multer**
 - **Cloudinary**
 - **Socket.IO**
-- **HTTP + WebSocket Hybrid Server**
 
 ---
 
@@ -104,20 +103,20 @@ This approach ensures scalability, reliability, low latency for chat, and safe d
 Connectly/
 ├── frontend/
 │   ├── src/
-│   │   ├── components/     # UI components
-│   │   ├── pages/          # Route pages (Home, Profile, Messages)
-│   │   ├── context/        # AppContext (global state)
-│   │   ├── hooks/          # Custom hooks
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── context/
+│   │   ├── hooks/
 │   │   └── assets/
 │   └── package.json
 │
 ├── backend/
-│   ├── config/         # DB & Cloudinary config
-│   ├── models/         # Mongoose schemas
-│   ├── controllers/    # Business logic
-│   ├── routes/         # API routes
-│   ├── middleware/     # Auth & guards
-│   ├── socket/         # WebSocket logic
+│   ├── config/
+│   ├── models/
+│   ├── controllers/
+│   ├── routes/
+│   ├── middleware/
+│   ├── socket/
 │   └── package.json
 │
 └── README.md
@@ -125,12 +124,12 @@ Connectly/
 
 ---
 
-## 🚦 Getting Started
+## 🚦 Getting Started (Local Development)
 
 ### Prerequisites
 - Node.js (v18+)
 - MongoDB (local or Atlas)
-- npm or yarn
+- npm / yarn
 
 ### Installation
 
@@ -158,62 +157,53 @@ npm install
 ### Backend (`backend/.env`)
 ```env
 PORT=5000
-MONGODB_URI=your_mongodb_uri
-JWT_SECRET=your_jwt_secret
-CLOUDINARY_CLOUD_NAME=your_cloudinary_name
-CLOUDINARY_API_KEY=your_cloudinary_key
-CLOUDINARY_API_SECRET=your_cloudinary_secret
+MONGODB_URI=your_mongodb_connection_string
+JWT_SECRET=your_strong_secret
+CLOUDINARY_CLOUD_NAME=xxx
+CLOUDINARY_API_KEY=xxx
+CLOUDINARY_API_SECRET=xxx
 ```
 
 ### Frontend (`frontend/.env`)
 ```env
-VITE_API_URL=http://localhost:5000/api
+VITE_API_URL=https://your-backend-domain.com/api
+# or for local testing: http://localhost:5000/api
 ```
 
 ---
 
-## ▶️ Running the App
+## ▶️ Running Locally
 
-### Start Backend
+### Backend
 ```bash
 cd backend
 npm run dev
 ```
 
-### Start Frontend
+### Frontend
 ```bash
 cd frontend
 npm run dev
 ```
 
-- Frontend → http://localhost:5173  
-- Backend API → http://localhost:5000
-
 ---
 
 ## 🔐 Security Notes
-- JWT stored in **HTTP-only cookies**
-- Protected routes with auth middleware
-- Passwords hashed using **bcrypt**
-- Backend validation on all sensitive routes
+- JWT in **HTTP-only cookies**
+- Passwords hashed with **bcrypt**
+- Protected routes + input validation
 
 ---
 
-## 🛣️ Roadmap (Next Enhancements)
-- [ ] Typing indicators (WebSocket)
-- [ ] Message seen / delivered status
-- [ ] Live notifications via WebSocket
+## 🛣️ Roadmap
+- [ ] Typing indicators
+- [ ] Message seen/delivered status
+- [ ] Live notifications (WebSocket)
 - [ ] Group chat
-- [ ] Online / offline presence
+- [ ] Online/offline status
 
 ---
 
 ## 👤 Author
 **Rajnish Kumar**  
 GitHub: [@rajnishkumar1906](https://github.com/rajnishkumar1906)
-
-> 💡 *Connectly demonstrates real-world social media architecture with clean separation of concerns, scalable APIs, and real-time communication — perfect for production-level systems and strong portfolio showcase.*
-```
-
-You can now copy the entire content above and paste it directly into your GitHub README.md file.
-
