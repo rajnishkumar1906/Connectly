@@ -27,8 +27,10 @@ export const signUp = async (req, res) => {
 
     res.cookie("token", token, {
       httpOnly: true,
-      sameSite: "lax",
+      secure: true,       // REQUIRED (Render uses HTTPS)
+      sameSite: "none",   // REQUIRED (cross-site cookies)
     });
+
 
     res.status(201).json({
       user: { _id: user._id, username: user.username, email: user.email },
@@ -89,6 +91,10 @@ export const getMe = async (req, res) => {
 
 /* ================= LOGOUT ================= */
 export const logout = (req, res) => {
-  res.clearCookie("token");
+  res.clearCookie("token", {
+    secure: true,
+    sameSite: "none",
+  });
+
   res.status(200).json({ message: "Logged out successfully" });
 };
