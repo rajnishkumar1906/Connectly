@@ -2,9 +2,9 @@ import React, { useState, useContext, useRef } from "react";
 import { AppContext } from "../context/AppContext";
 import Button from "./ui/Button";
 import Textarea from "./ui/Textarea";
-import { 
-  X, 
-  Image as ImageIcon, 
+import {
+  X,
+  Image as ImageIcon,
   Globe,
   Users,
   Lock,
@@ -93,7 +93,7 @@ const CreatePost = ({ isOpen, onClose, onCreate }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/80" onClick={handleClose} />
-      
+
       <div className="relative w-full max-w-lg bg-gray-900 border border-gray-800 rounded-lg overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-800">
@@ -114,33 +114,30 @@ const CreatePost = ({ isOpen, onClose, onCreate }) => {
           <div className="flex gap-2">
             <button
               onClick={() => setAudience("public")}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm ${
-                audience === "public" 
-                  ? "bg-white text-black" 
-                  : "bg-gray-800 text-gray-400 hover:text-white"
-              }`}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm ${audience === "public"
+                ? "bg-white text-black"
+                : "bg-gray-800 text-gray-400 hover:text-white"
+                }`}
             >
               <Globe size={14} />
               Public
             </button>
             <button
               onClick={() => setAudience("friends")}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm ${
-                audience === "friends" 
-                  ? "bg-white text-black" 
-                  : "bg-gray-800 text-gray-400 hover:text-white"
-              }`}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm ${audience === "friends"
+                ? "bg-white text-black"
+                : "bg-gray-800 text-gray-400 hover:text-white"
+                }`}
             >
               <Users size={14} />
               Friends
             </button>
             <button
               onClick={() => setAudience("private")}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm ${
-                audience === "private" 
-                  ? "bg-white text-black" 
-                  : "bg-gray-800 text-gray-400 hover:text-white"
-              }`}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm ${audience === "private"
+                ? "bg-white text-black"
+                : "bg-gray-800 text-gray-400 hover:text-white"
+                }`}
             >
               <Lock size={14} />
               Only Me
@@ -198,8 +195,17 @@ const CreatePost = ({ isOpen, onClose, onCreate }) => {
               onChange={(e) => setCaption(e.target.value)}
               placeholder="What's happening?"
               rows={4}
-              className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 resize-none"
+              className="
+    bg-gray-800 
+    border-gray-700 
+    text-white 
+    caret-white 
+    placeholder-gray-500 
+    resize-none
+  "
             />
+
+
             <div className="absolute bottom-2 right-2">
               <button className="p-1 text-gray-500 hover:text-white">
                 <Smile size={18} />

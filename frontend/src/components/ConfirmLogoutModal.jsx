@@ -8,12 +8,12 @@ const ConfirmLogoutModal = ({ isOpen, onClose, onConfirm }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center animate-fade-in">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
 
       {/* Card */}
-      <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 z-10 transform transition-all scale-100">
+      <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 z-10">
         <h2 className="text-xl font-bold text-gray-900 mb-2">
           Log out?
         </h2>
@@ -25,14 +25,14 @@ const ConfirmLogoutModal = ({ isOpen, onClose, onConfirm }) => {
         <div className="flex justify-end gap-3">
           <Button
             onClick={onClose}
-            variant="secondary"
+            className="bg-gray-200 text-gray-900 hover:bg-gray-300"
           >
             Cancel
           </Button>
 
           <Button
             onClick={onConfirm}
-            variant="danger"
+            className="bg-red-600 text-white hover:bg-red-700"
           >
             Log out
           </Button>
