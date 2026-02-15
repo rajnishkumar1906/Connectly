@@ -71,6 +71,7 @@ const Login = () => {
                 value={formData.username}
                 onChange={handleChange}
                 required
+                className='bg-white text-gray-900 placeholder-gray-400'
               />
             )}
 
@@ -81,6 +82,7 @@ const Login = () => {
               value={formData.email}
               onChange={handleChange}
               required
+              className='text-black-900'
             />
 
             <Input
