@@ -1,66 +1,78 @@
 
+```
 # 🌐 Connectly
 
-**Connectly** is a modern full-stack social media platform built with the **MERN stack**.  
-It allows users to connect, share posts, follow others, and communicate via **real-time chat**.
+**Connectly** is a full-stack social media platform built with the **MERN stack**, featuring **secure authentication**, a **social feed**, and **real-time messaging** using WebSockets.
 
-This project is designed as a **portfolio-grade, real-world application**, demonstrating scalable backend architecture, clean frontend state management, and hybrid **REST + WebSocket** communication.
+It is a **production-deployed, portfolio-grade application** that demonstrates real-world backend architecture, frontend state management, secure cookie-based authentication, and hybrid **REST + WebSocket** communication.
+
+---
+
+## 🌍 Live Deployment
+
+- **Frontend (Vercel):** https://connectly-lovat.vercel.app  
+- **Backend API (Render):** https://connectly-ff25.onrender.com  
+
+> The application is fully deployed over **HTTPS**, using **secure cross-site cookies**, proper **CORS configuration**, and production-ready environment separation.
 
 ---
 
 ## 🚀 Features
 
-### 🔐 Authentication & Users
+### 🔐 Authentication & Authorization
 - Secure signup & login using **JWT**
-- Authentication via **HTTP-only cookies**
-- Protected routes with middleware
-- Persistent login session
+- Authentication via **HTTP-only, secure cookies**
+- Cross-site auth (`SameSite=None`) for Vercel ↔ Render
+- Protected routes using auth middleware
+- Persistent login across refreshes
+- Logout with proper cookie invalidation
 
 ### 👤 User Profiles
-- Editable profile (first name, last name, bio, city, state, phone)
-- Profile picture support
-- Follower & following counts
+- Create & edit user profile
+- Bio, city, state, education, occupation, website
+- Profile & cover image support
 - View own profile & other users’ profiles
-- Follow / unfollow system
+- Followers / following system
+- Mutual follow → friends list
 
 ### 📰 Social Feed
-- Create posts (text or image)
-- Image uploads using **Multer + Cloudinary**
-- Like posts
+- Create text & image posts
+- Image uploads via **Multer + Cloudinary**
+- Like & unlike posts
 - Comment on posts
-- View feed from followed users
+- Personalized feed from followed users
 - User-specific post feeds
 
 ### 🤝 Social Graph
 - Follow / unfollow users
 - Followers & following lists
-- Friends list (mutual follows)
-- Recommended users
+- Friends (mutual follows)
+- Recommended users to follow
 
-### 💬 Messaging (Live Chat)
-- One-to-one chat between friends
-- Chat rooms stored in MongoDB
-- Message history via REST
-- **Real-time messaging using WebSockets (Socket.IO)**
+### 💬 Messaging (Real-Time Chat)
+- One-to-one chat between users
+- Chat rooms persisted in MongoDB
+- Load message history via REST
+- **Real-time messaging using Socket.IO**
 - Instant message delivery without refresh
 
 ### 🔔 Notifications
 - Follow notifications
 - Read / unread notification state
-- Notification count tracking
+- Unread notification count
 
 ### 📱 UI / UX
-- Responsive design (desktop & mobile)
-- Clean UI using **Tailwind CSS**
-- Modal-based create post
-- Tab-based profile sections
-- Instagram / Twitter-like layout
+- Responsive design (mobile & desktop)
+- Clean UI with **Tailwind CSS**
+- Modal-based post creation
+- Tab-based profile layout
+- Instagram / Twitter-inspired layout
 
 ---
 
-## ⚡ Real-Time Architecture (Important)
+## ⚡ Real-Time Architecture
 
-Connectly uses a **hybrid communication model**:
+Connectly uses a **hybrid communication model** for scalability and reliability:
 
 | Feature | Technology |
 |------|-----------|
@@ -70,11 +82,10 @@ Connectly uses a **hybrid communication model**:
 | Notifications (future live) | WebSocket |
 | Page refresh fallback | REST |
 
-This approach ensures:
-- Scalability
-- Reliability
-- Low latency for chat
-- Safe persistence of data
+This design ensures:
+- Low latency messaging
+- Reliable data persistence
+- Scalable real-time communication
 
 ---
 
@@ -98,7 +109,7 @@ This approach ensures:
 - **Multer**
 - **Cloudinary**
 - **Socket.IO**
-- **HTTP + WebSocket Hybrid Server**
+- **HTTP + WebSocket hybrid server**
 
 ---
 
@@ -109,20 +120,20 @@ This approach ensures:
 Connectly/
 ├── frontend/
 │   ├── src/
-│   │   ├── components/      # UI components
-│   │   ├── pages/           # Route pages (Home, Profile, Messages)
-│   │   ├── context/         # AppContext (global state)
-│   │   ├── hooks/           # Custom hooks
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── context/
+│   │   ├── hooks/
 │   │   └── assets/
 │   └── package.json
 │
 ├── backend/
-│   ├── config/              # DB & Cloudinary config
-│   ├── models/              # Mongoose schemas
-│   ├── controller/          # Business logic
-│   ├── router/              # API routes
-│   ├── middleware/          # Auth & guards
-│   ├── socket/              # WebSocket logic
+│   ├── config/
+│   ├── models/
+│   ├── controller/
+│   ├── router/
+│   ├── middleware/
+│   ├── socket/
 │   └── package.json
 │
 └── README.md
@@ -131,12 +142,12 @@ Connectly/
 
 ---
 
-## 🚦 Getting Started
+## 🚦 Getting Started (Local Development)
 
 ### Prerequisites
 - Node.js (v18+)
 - MongoDB (local or Atlas)
-- npm or yarn
+- npm
 
 ---
 
@@ -169,23 +180,26 @@ npm install
 
 ```env
 PORT=5000
-MONGODB_URI=your_mongodb_uri
+MONGO_URI=your_mongodb_atlas_uri
 JWT_SECRET=your_jwt_secret
 
-CLOUDINARY_CLOUD_NAME=your_cloudinary_name
-CLOUDINARY_API_KEY=your_cloudinary_key
-CLOUDINARY_API_SECRET=your_cloudinary_secret
+FRONTEND_URL=http://localhost:5173
+NODE_ENV=development
+
+CLOUD_NAME=your_cloudinary_name
+CLOUD_API_KEY=your_cloudinary_key
+CLOUD_API_SECRET=your_cloudinary_secret
 ```
 
 ### Frontend (`frontend/.env`)
 
 ```env
-VITE_API_URL=http://localhost:5000/api
+VITE_API_URL=http://localhost:5000
 ```
 
 ---
 
-## ▶️ Running the App
+## ▶️ Running the App Locally
 
 ### Start Backend
 
@@ -209,32 +223,50 @@ npm run dev
 ## 🔐 Security Notes
 
 * JWT stored in **HTTP-only cookies**
-* Protected routes with auth middleware
-* Passwords hashed using **bcrypt**
-* Backend validation on all sensitive routes
+* Secure cookies enforced in production
+* Passwords hashed with **bcrypt**
+* Auth middleware protects sensitive routes
+* Backend validation on all critical endpoints
 
 ---
 
-## 🛣️ Roadmap (Next Enhancements)
+## 🏗️ Production Notes
 
-* [ ] Typing indicators (WebSocket)
-* [ ] Message seen / delivered status
+* Frontend deployed on **Vercel**
+* Backend deployed on **Render**
+* Database hosted on **MongoDB Atlas**
+* Secure cross-site authentication via HTTPS cookies
+* CORS configured with exact origin matching
+* SPA routing handled with Vercel rewrites
+* WebSockets enabled for real-time chat
+
+---
+
+## 🛣️ Roadmap
+
+* [x] Deployment (Vercel + Render)
+* [ ] Typing indicators
+* [ ] Message delivered / seen status
 * [ ] Live notifications via WebSocket
 * [ ] Group chat
 * [ ] Online / offline presence
-* [ ] Deployment (Vercel + Render)
+* [ ] Performance optimization
 
 ---
-
-## 👤 Author
-
-**Rajnish Kumar**
-
-* GitHub: [@rajnishkumar1906](https://github.com/rajnishkumar1906)
-
 ---
 
-> 💡 *Connectly demonstrates real-world social media architecture with clean separation of concerns, scalable APIs, and real-time communication — suitable for production-level systems and strong portfolio showcase.*
+> 💡 *Connectly showcases real-world social media architecture with secure authentication, scalable APIs, and real-time communication — suitable for production systems and strong portfolio presentation.*
 
 ```
 
+---
+
+## ✅ Next (optional but powerful)
+If you want, I can:
+- Add **screenshots / GIF section**
+- Write a **resume-ready project description**
+- Create a **System Design summary**
+- Add badges (Vercel, Render, MongoDB, WebSocket)
+
+Just tell me what you want next 🚀
+```
