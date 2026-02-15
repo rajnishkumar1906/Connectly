@@ -1,6 +1,4 @@
-Here is the cleaned-up README.md content ready for direct copy-paste to GitHub:
 
-```markdown
 # 🌐 Connectly
 
 **Connectly** is a modern full-stack social media platform built with the **MERN stack**.  
@@ -218,3 +216,4 @@ GitHub: [@rajnishkumar1906](https://github.com/rajnishkumar1906)
 ```
 
 You can now copy the entire content above and paste it directly into your GitHub README.md file.
+
