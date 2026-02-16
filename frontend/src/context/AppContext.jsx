@@ -12,14 +12,14 @@ import { io } from "socket.io-client";
 export const AppContext = createContext(null);
 
 /* ================= API ================= */
-const API_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:5000";
+const RAW_API = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const TRIMMED = RAW_API.replace(/\/+$/, "");
+const BASE_API = TRIMMED.endsWith("/api") ? TRIMMED.slice(0, -4) : TRIMMED;
 
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: BASE_API,
   withCredentials: true
 });
-
 
 /* ========================================================= */
 
@@ -51,7 +51,7 @@ export const AppProvider = ({ children }) => {
       : "dark"
   );
 
-  /* ================= SERVERS & CHANNELS (Discord-like) ================= */
+  /* ================= SERVERS & CHANNELS ================= */
   const [myServers, setMyServers] = useState([]);
   const [currentServer, setCurrentServer] = useState(null);
   const [channels, setChannels] = useState([]);
@@ -61,10 +61,9 @@ export const AppProvider = ({ children }) => {
 
   /* ================= HELPERS ================= */
   const handleError = (err, fallback) => {
-    if (err?.response?.status === 401) return; // ⛔ silent auth fail
+    if (err?.response?.status === 401) return;
     toast.error(err?.response?.data?.message || fallback);
   };
-
 
   const resetAuthState = () => {
     setUser(null);
@@ -85,10 +84,10 @@ export const AppProvider = ({ children }) => {
     setDiscoverServersList([]);
   };
 
-  /* ================= SOCKET (polling first for Render/proxies, then websocket) ================= */
+  /* ================= SOCKET ================= */
   useEffect(() => {
     if (isAuthorised && !socket.current) {
-      socket.current = io(API_URL, {
+      socket.current = io(BASE_API, {
         withCredentials: true,
         transports: ["polling", "websocket"],
         reconnection: true,
@@ -98,9 +97,7 @@ export const AppProvider = ({ children }) => {
       });
 
       socket.current.on("connect", () => {});
-      socket.current.on("connect_error", () => {
-        // Silent: DMs/communities may work on next reconnect or via polling
-      });
+      socket.current.on("connect_error", () => {});
     }
 
     return () => {
@@ -209,7 +206,9 @@ export const AppProvider = ({ children }) => {
   const updateProfile = async (data) => {
     try {
       const res = await api.patch("/api/users/update-profile", data, {
-        headers: data instanceof FormData ? {} : { "Content-Type": "application/json" },
+        headers: data instanceof FormData
+          ? { "Content-Type": "multipart/form-data" }
+          : { "Content-Type": "application/json" }
       });
       const updated = res.data.profile || res.data;
       setProfile(updated);
@@ -283,7 +282,6 @@ export const AppProvider = ({ children }) => {
 
   const fetchFeed = useCallback(async () => {
     if (!isAuthorised) return;
-
     try {
       const res = await api.get("/api/feed/feed");
       setFeed(res.data.posts || []);
@@ -292,7 +290,6 @@ export const AppProvider = ({ children }) => {
       setFeed([]);
     }
   }, [isAuthorised]);
-
 
   const likePost = async (postId) => {
     try {
@@ -366,7 +363,6 @@ export const AppProvider = ({ children }) => {
   /* ================= RECOMMENDATIONS ================= */
   const fetchRecommendedUsers = useCallback(async () => {
     if (!isAuthorised) return;
-
     try {
       const res = await api.get("/api/users/recommended/list");
       setRecommendedUsers(res.data.users || []);
@@ -375,7 +371,6 @@ export const AppProvider = ({ children }) => {
       setRecommendedUsers([]);
     }
   }, [isAuthorised]);
-
 
   /* ================= NOTIFICATIONS ================= */
   const fetchNotifications = useCallback(async () => {
@@ -608,6 +603,7 @@ export const AppProvider = ({ children }) => {
         notifications,
         unreadCount,
         theme,
+        setTheme,
 
         myServers,
         currentServer,
@@ -661,7 +657,6 @@ export const AppProvider = ({ children }) => {
         fetchRecommendedUsers,
         fetchNotifications,
         markNotificationRead,
-        setTheme
       }}
     >
       {children}

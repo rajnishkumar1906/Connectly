@@ -91,18 +91,18 @@ const CreatePost = ({ isOpen, onClose, onCreate }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/80" onClick={handleClose} />
+    <div className="fixed inset-0 z-50 flex items-center justify-center animate-fade-in">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={handleClose} />
 
-      <div className="relative w-full max-w-lg bg-gray-900 border border-gray-800 rounded-lg overflow-hidden">
+      <div className="relative w-full max-w-lg glass-panel rounded-xl overflow-hidden shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-800">
-          <h2 className="text-lg font-bold text-white">Create Post</h2>
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800 glass-divider">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">Create Post</h2>
           <Button
             variant="ghost"
             size="icon"
             onClick={handleClose}
-            className="text-gray-400 hover:text-white"
+            className="glass-button"
           >
             <X size={20} />
           </Button>
@@ -114,30 +114,33 @@ const CreatePost = ({ isOpen, onClose, onCreate }) => {
           <div className="flex gap-2">
             <button
               onClick={() => setAudience("public")}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm ${audience === "public"
-                ? "bg-white text-black"
-                : "bg-gray-800 text-gray-400 hover:text-white"
-                }`}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm transition ${
+                audience === "public"
+                ? "glass-heavy text-black dark:text-white"
+                : "glass-button text-gray-600 dark:text-gray-400"
+              }`}
             >
               <Globe size={14} />
               Public
             </button>
             <button
               onClick={() => setAudience("friends")}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm ${audience === "friends"
-                ? "bg-white text-black"
-                : "bg-gray-800 text-gray-400 hover:text-white"
-                }`}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm transition ${
+                audience === "friends"
+                ? "glass-heavy text-black dark:text-white"
+                : "glass-button text-gray-600 dark:text-gray-400"
+              }`}
             >
               <Users size={14} />
               Friends
             </button>
             <button
               onClick={() => setAudience("private")}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm ${audience === "private"
-                ? "bg-white text-black"
-                : "bg-gray-800 text-gray-400 hover:text-white"
-                }`}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm transition ${
+                audience === "private"
+                ? "glass-heavy text-black dark:text-white"
+                : "glass-button text-gray-600 dark:text-gray-400"
+              }`}
             >
               <Lock size={14} />
               Only Me
@@ -146,7 +149,7 @@ const CreatePost = ({ isOpen, onClose, onCreate }) => {
 
           {/* Error */}
           {error && (
-            <div className="text-red-400 text-sm p-2 bg-gray-800 rounded">
+            <div className="text-red-400 text-sm p-2 glass rounded">
               {error}
             </div>
           )}
@@ -154,12 +157,12 @@ const CreatePost = ({ isOpen, onClose, onCreate }) => {
           {/* Image Upload */}
           {!preview ? (
             <div
-              className="border-2 border-dashed border-gray-700 rounded-lg p-8 text-center cursor-pointer hover:bg-gray-800"
+              className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-8 text-center cursor-pointer glass-card"
               onClick={() => fileInputRef.current?.click()}
             >
               <ImageIcon className="w-8 h-8 text-gray-500 mx-auto mb-2" />
-              <p className="text-gray-400">Click to upload image</p>
-              <p className="text-sm text-gray-500 mt-1">PNG, JPG up to 5MB</p>
+              <p className="text-gray-600 dark:text-gray-400">Click to upload image</p>
+              <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">PNG, JPG up to 5MB</p>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -169,7 +172,7 @@ const CreatePost = ({ isOpen, onClose, onCreate }) => {
               />
             </div>
           ) : (
-            <div className="relative">
+            <div className="relative image-preview">
               <img
                 src={preview}
                 alt="Preview"
@@ -181,7 +184,7 @@ const CreatePost = ({ isOpen, onClose, onCreate }) => {
                   setImage(null);
                   setPreview(null);
                 }}
-                className="absolute top-2 right-2 w-8 h-8 bg-black/80 text-white rounded-full flex items-center justify-center"
+                className="image-preview-remove"
               >
                 <X size={16} />
               </button>
@@ -195,19 +198,11 @@ const CreatePost = ({ isOpen, onClose, onCreate }) => {
               onChange={(e) => setCaption(e.target.value)}
               placeholder="What's happening?"
               rows={4}
-              className="
-    bg-gray-800 
-    border-gray-700 
-    text-white 
-    caret-white 
-    placeholder-gray-500 
-    resize-none
-  "
+              className="glass-input resize-none"
             />
 
-
             <div className="absolute bottom-2 right-2">
-              <button className="p-1 text-gray-500 hover:text-white">
+              <button className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition glass-button rounded-full">
                 <Smile size={18} />
               </button>
             </div>
@@ -215,18 +210,18 @@ const CreatePost = ({ isOpen, onClose, onCreate }) => {
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-800 flex justify-end gap-2">
+        <div className="p-4 border-t border-gray-200 dark:border-gray-800 glass-divider flex justify-end gap-2">
           <Button
             variant="secondary"
             onClick={handleClose}
-            className="border border-gray-700"
+            className="glass-button"
           >
             Cancel
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={uploading || (!image && !caption.trim())}
-            className="bg-white text-black hover:bg-gray-200"
+            className="glass-gradient text-white"
           >
             {uploading ? (
               <>

@@ -4,30 +4,26 @@ import { AppContext } from "../context/AppContext";
 import Avatar from "../components/ui/Avatar";
 import Button from "../components/ui/Button";
 import PostItem from "../components/PostItem";
-import { 
-  Grid, 
-  Users, 
-  UserPlus, 
-  Camera, 
-  X, 
-  MapPin, 
-  Calendar,
-  Edit3,
-  MessageCircle,
-  Heart,
-  Loader2,
+import PostModal from "../components/PostModal";
+import {
+  Camera,
+  X,
+  MapPin,
   Briefcase,
   GraduationCap,
   Link as LinkIcon,
-  MoreVertical,
-  Settings,
-  Check
+  Loader2,
+  ChevronLeft,
+  Users,
+  Image as ImageIcon
 } from "lucide-react";
 
-/* ================= PROFILE ================= */
 const Profile = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
+
+  const context = useContext(AppContext);
+  
   const {
     user,
     updateProfile,
@@ -42,7 +38,7 @@ const Profile = () => {
     addComment,
     getComments,
     isAuthorised
-  } = useContext(AppContext);
+  } = context;
 
   const profileUserId = userId || user?._id;
   const isOwnProfile = !userId || userId === user?._id;
@@ -55,8 +51,10 @@ const Profile = () => {
   const [isFollowing, setIsFollowing] = useState(false);
   const [activeTab, setActiveTab] = useState("posts");
   const [loading, setLoading] = useState(true);
+  
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  /* ================= EDIT PROFILE ================= */
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState({
     firstName: "",
@@ -73,521 +71,587 @@ const Profile = () => {
   const [avatarFile, setAvatarFile] = useState(null);
   const [coverFile, setCoverFile] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [coverPreview, setCoverPreview] = useState(null);
 
-  /* ================= LOAD PROFILE ================= */
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  const imageUrl = (url) => {
+    if (!url) return null;
+    return url?.startsWith("http") ? url : url ? `${API_URL}${url}` : null;
+  };
+
   useEffect(() => {
     if (!isAuthorised || !profileUserId) return;
 
     const load = async () => {
       setLoading(true);
       try {
-        const [
-          profileRes,
-          followersRes,
-          followingRes,
-          postsRes,
-          followState
-        ] = await Promise.all([
-          fetchUserProfile(profileUserId),
-          fetchUserFollowers(profileUserId),
-          fetchUserFollowing(profileUserId),
-          fetchUserPosts(profileUserId),
-          isOwnProfile ? false : checkFollow(profileUserId)
-        ]);
+        const profileRes = await fetchUserProfile(profileUserId);
+        const followersRes = await fetchUserFollowers(profileUserId);
+        const followingRes = await fetchUserFollowing(profileUserId);
+        const postsRes = await fetchUserPosts(profileUserId);
+        
+        let followState = false;
+        if (!isOwnProfile) {
+          followState = await checkFollow(profileUserId);
+        }
 
-        setProfileUser(profileRes?.user);
-        setProfileData(profileRes?.profile);
+        setProfileUser(profileRes?.user || profileRes);
+        setProfileData(profileRes?.profile || profileRes);
         setFollowers(followersRes || []);
         setFollowing(followingRes || []);
         setPosts(postsRes || []);
         setIsFollowing(Boolean(followState));
-      } catch (error) {
-        console.error("Error loading profile:", error);
+      } catch (err) {
+        console.error("Error loading profile:", err);
       } finally {
         setLoading(false);
       }
     };
 
     load();
-  }, [profileUserId, isAuthorised]);
+  }, [profileUserId, isAuthorised, isOwnProfile]);
 
-  /* ================= FOLLOW ================= */
   const toggleFollow = async () => {
     try {
       if (isFollowing) {
         await unfollowUser(profileUserId);
         setIsFollowing(false);
+        setFollowers(prev => prev.filter(f => f._id !== user?._id));
       } else {
         await followUser(profileUserId);
         setIsFollowing(true);
+        if (user) {
+          setFollowers(prev => [...prev, user]);
+        }
       }
-
-      setFollowers(await fetchUserFollowers(profileUserId));
-      setFollowing(await fetchUserFollowing(profileUserId));
     } catch (error) {
-      console.error("Error toggling follow:", error);
+      console.error("Follow toggle error:", error);
     }
   };
 
-  /* ================= EDIT PROFILE ================= */
   const openEdit = () => {
+    const data = profileData || profileUser;
     setForm({
-      firstName: profileData?.firstName || "",
-      lastName: profileData?.lastName || "",
-      bio: profileData?.bio || "",
-      city: profileData?.city || "",
-      state: profileData?.state || "",
-      website: profileData?.website || "",
-      occupation: profileData?.occupation || "",
-      education: profileData?.education || "",
-      phoneNo: profileData?.phoneNo || ""
+      firstName: data?.firstName || "",
+      lastName: data?.lastName || "",
+      bio: data?.bio || "",
+      city: data?.city || "",
+      state: data?.state || "",
+      website: data?.website || "",
+      occupation: data?.occupation || "",
+      education: data?.education || "",
+      phoneNo: data?.phoneNo || ""
     });
+    
+    setAvatarPreview(imageUrl(data?.avatar));
+    setCoverPreview(imageUrl(data?.coverImage));
     setIsEditing(true);
+  };
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setAvatarFile(file);
+      setAvatarPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleCoverChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setCoverFile(file);
+      setCoverPreview(URL.createObjectURL(file));
+    }
   };
 
   const saveProfile = async () => {
     setUploading(true);
-    try {
-      const formData = new FormData();
-      Object.keys(form).forEach((key) => {
-        if (form[key] != null && form[key] !== "") formData.append(key, form[key]);
-      });
-      if (avatarFile) formData.append("avatar", avatarFile);
-      if (coverFile) formData.append("cover", coverFile);
 
-      const success = await updateProfile(formData);
-      if (success) {
-        const refreshed = await fetchUserProfile(profileUserId);
-        if (refreshed?.profile) setProfileData(refreshed.profile);
-        setAvatarFile(null);
-        setCoverFile(null);
-        setIsEditing(false);
-      }
-    } catch (error) {
-      console.error("Error saving profile:", error);
-    } finally {
-      setUploading(false);
+    const fd = new FormData();
+    Object.entries(form).forEach(([k, v]) => {
+      if (v) fd.append(k, v);
+    });
+
+    if (avatarFile) fd.append("avatar", avatarFile);
+    if (coverFile) fd.append("coverImage", coverFile);
+
+    const success = await updateProfile(fd);
+
+    if (success) {
+      const refreshed = await fetchUserProfile(profileUserId);
+      setProfileUser(refreshed?.user || refreshed);
+      setProfileData(refreshed?.profile || refreshed);
+
+      setAvatarFile(null);
+      setCoverFile(null);
+      setAvatarPreview(null);
+      setCoverPreview(null);
+      setIsEditing(false);
     }
+
+    setUploading(false);
   };
 
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
-  const imageUrl = (url) => (url?.startsWith("http") ? url : url ? `${API_URL}${url}` : null);
+  const handlePostClick = (post) => {
+    setSelectedPost(post);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedPost(null);
+  };
+
+  const handleLike = async (postId) => {
+    await likePost(postId);
+    setPosts(prev => prev.map(p => 
+      p._id === postId 
+        ? { ...p, likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1, isLiked: !p.isLiked }
+        : p
+    ));
+  };
+
+  const handleUserClick = (clickedUserId) => {
+    navigate(`/profile/${clickedUserId}`);
+  };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
-        <Loader2 className="w-8 h-8 animate-spin text-white" />
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center glass-card p-8 rounded-xl">
+          <Loader2 className="animate-spin w-8 h-8 mx-auto mb-4 text-gray-600 dark:text-gray-400" />
+          <p className="text-gray-600 dark:text-gray-400">Loading profile...</p>
+        </div>
       </div>
     );
   }
 
-  const displayName =
-    `${profileData?.firstName || ""} ${profileData?.lastName || ""}`.trim() ||
-    profileUser?.username;
+  const displayData = profileData || profileUser;
+  const displayName = displayData?.firstName 
+    ? `${displayData.firstName} ${displayData.lastName || ""}`.trim()
+    : displayData?.username || "User";
 
-  const joinDate = profileUser?.createdAt 
-    ? new Date(profileUser.createdAt).toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'long' 
-      })
-    : null;
+  const coverImage = coverPreview || imageUrl(displayData?.coverImage);
+  const avatarImage = avatarPreview || imageUrl(displayData?.avatar);
 
-  /* ================= UI ================= */
   return (
-    <div className="min-h-screen bg-white text-gray-900 dark:bg-black dark:text-white">
-      {/* HEADER */}
-      <div className="sticky top-0 z-10 bg-white/95 dark:bg-black/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 px-4 py-3">
-        <div className="flex items-center">
-          <button onClick={() => navigate(-1)} className="mr-4">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <div>
-            <h1 className="font-bold text-lg">{displayName}</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{posts.length} posts</p>
-          </div>
-        </div>
+    <div className="min-h-screen bg-transparent text-gray-900 dark:text-white">
+      {/* Header */}
+      <div className="sticky top-0 z-10 glass-heavy px-4 py-3 flex items-center gap-4">
+        <button 
+          onClick={() => navigate(-1)} 
+          className="p-2 glass-button rounded-full"
+        >
+          <ChevronLeft size={20} />
+        </button>
+        <h2 className="font-bold text-lg">{displayName}</h2>
       </div>
 
-      {/* COVER PHOTO */}
-      <div className="relative h-48 bg-gray-900 overflow-hidden">
-        {(coverFile || profileData?.coverImage) && (
+      {/* Cover Image */}
+      <div className="relative h-48 glass-card rounded-none border-0">
+        {coverImage ? (
           <img
-            src={coverFile ? URL.createObjectURL(coverFile) : imageUrl(profileData.coverImage) || profileData.coverImage}
+            src={coverImage}
             alt="Cover"
             className="w-full h-full object-cover"
           />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+            <ImageIcon className="w-12 h-12 text-white/50" />
+          </div>
         )}
+
         {isOwnProfile && (
-          <button
-            onClick={() => document.getElementById("coverInput").click()}
-            className="absolute bottom-4 right-4 bg-black/80 text-white p-2 rounded-full hover:bg-black"
-          >
-            <Camera size={16} />
-          </button>
+          <div className="absolute bottom-4 right-4">
+            <input
+              id="coverInput"
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleCoverChange}
+            />
+            <button
+              onClick={() => document.getElementById("coverInput").click()}
+              className="glass-button p-2 rounded-full"
+            >
+              <Camera size={20} className="text-gray-700 dark:text-gray-300" />
+            </button>
+          </div>
         )}
-        <input id="coverInput" type="file" accept="image/*" hidden onChange={(e) => e.target.files[0] && setCoverFile(e.target.files[0])} />
       </div>
 
-      {/* PROFILE HEADER */}
-      <div className="px-4 -mt-16 relative z-10">
-        <div className="flex justify-between items-end mb-4">
+      {/* Profile Info */}
+      <div className="px-4 relative">
+        <div className="flex justify-between items-end -mt-12 mb-4">
           <div className="relative">
-            <Avatar
-              src={avatarFile ? URL.createObjectURL(avatarFile) : imageUrl(profileData?.avatar) || profileData?.avatar}
-              fallback={displayName}
-              size="3xl"
-              className="border-4 border-black"
-            />
+            <div className="glass-avatar-ring rounded-full p-1">
+              <Avatar
+                src={avatarImage}
+                fallback={displayName}
+                className="w-24 h-24 rounded-full"
+              />
+            </div>
+            
             {isOwnProfile && (
-              <>
+              <div className="absolute bottom-0 right-0">
+                <input
+                  id="avatarInput"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleAvatarChange}
+                />
                 <button
                   onClick={() => document.getElementById("avatarInput").click()}
-                  className="absolute bottom-2 right-2 bg-black/80 text-white p-2 rounded-full hover:bg-black"
+                  className="glass-button p-1.5 rounded-full"
                 >
-                  <Camera size={14} />
+                  <Camera size={16} className="text-gray-700 dark:text-gray-300" />
                 </button>
-                <input id="avatarInput" type="file" accept="image/*" hidden onChange={(e) => e.target.files[0] && setAvatarFile(e.target.files[0])} />
-              </>
-            )}
-          </div>
-
-          <div className="flex gap-2">
-            {isOwnProfile ? (
-              <>
-                <Button
-                  variant="secondary"
-                  onClick={openEdit}
-                  className="bg-transparent border border-gray-700 hover:bg-gray-900"
-                >
-                  Edit Profile
-                </Button>
-                <Button variant="ghost" size="icon" className="border border-gray-700">
-                  <Settings size={18} />
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button
-                  onClick={toggleFollow}
-                  className={isFollowing ? "bg-transparent border border-gray-700 hover:bg-gray-900" : ""}
-                >
-                  {isFollowing ? "Following" : "Follow"}
-                </Button>
-                <Button variant="ghost" size="icon" className="border border-gray-700">
-                  <MessageCircle size={18} />
-                </Button>
-                <Button variant="ghost" size="icon" className="border border-gray-700">
-                  <MoreVertical size={18} />
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* NAME & USERNAME */}
-        <div className="mb-4">
-          <h1 className="text-xl font-bold">{displayName}</h1>
-          <p className="text-gray-400">@{profileUser?.username}</p>
-        </div>
-
-        {/* BIO */}
-        {profileData?.bio && (
-          <p className="mb-4 text-white">{profileData.bio}</p>
-        )}
-
-        {/* DETAILS */}
-        <div className="space-y-2 mb-4 text-gray-400 text-sm">
-          {profileData?.city && profileData?.state && (
-            <div className="flex items-center gap-2">
-              <MapPin size={14} />
-              <span>{profileData.city}, {profileData.state}</span>
-            </div>
-          )}
-          {profileData?.occupation && (
-            <div className="flex items-center gap-2">
-              <Briefcase size={14} />
-              <span>{profileData.occupation}</span>
-            </div>
-          )}
-          {profileData?.website && (
-            <a href={profileData.website.startsWith("http") ? profileData.website : `https://${profileData.website}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-blue-400 hover:underline">
-              <LinkIcon size={14} />
-              <span>{profileData.website.replace(/^https?:\/\//, "")}</span>
-            </a>
-          )}
-          {profileData?.phoneNo && (
-            <div className="flex items-center gap-2">
-              <span>{profileData.phoneNo}</span>
-            </div>
-          )}
-          {profileData?.education && (
-            <div className="flex items-center gap-2">
-              <GraduationCap size={14} />
-              <span>{profileData.education}</span>
-            </div>
-          )}
-          {joinDate && (
-            <div className="flex items-center gap-2">
-              <Calendar size={14} />
-              <span>Joined {joinDate}</span>
-            </div>
-          )}
-        </div>
-
-        {/* STATS */}
-        <div className="flex gap-6 mb-4">
-          <button onClick={() => setActiveTab("following")} className="hover:underline">
-            <span className="font-bold text-white">{following.length}</span>
-            <span className="text-gray-400"> Following</span>
-          </button>
-          <button onClick={() => setActiveTab("followers")} className="hover:underline">
-            <span className="font-bold text-white">{followers.length}</span>
-            <span className="text-gray-400"> Followers</span>
-          </button>
-        </div>
-      </div>
-
-      {/* TABS */}
-      <div className="border-b border-gray-800">
-        <div className="flex">
-          <button
-            onClick={() => setActiveTab("posts")}
-            className={`flex-1 py-4 font-medium text-sm ${activeTab === "posts" ? "text-white border-b-2 border-white" : "text-gray-400"}`}
-          >
-            Posts
-          </button>
-          <button
-            onClick={() => setActiveTab("replies")}
-            className={`flex-1 py-4 font-medium text-sm ${activeTab === "replies" ? "text-white border-b-2 border-white" : "text-gray-400"}`}
-          >
-            Replies
-          </button>
-          <button
-            onClick={() => setActiveTab("media")}
-            className={`flex-1 py-4 font-medium text-sm ${activeTab === "media" ? "text-white border-b-2 border-white" : "text-gray-400"}`}
-          >
-            Media
-          </button>
-          <button
-            onClick={() => setActiveTab("likes")}
-            className={`flex-1 py-4 font-medium text-sm ${activeTab === "likes" ? "text-black border-b-2 border-black dark:text-white dark:border-white" : "text-gray-500 dark:text-gray-400"}`}
-          >
-            Likes
-          </button>
-        </div>
-      </div>
-
-      {/* CONTENT */}
-      <div>
-        {activeTab === "posts" && (
-          posts.length === 0 ? (
-            <div className="text-center py-12 px-4">
-              <div className="w-16 h-16 bg-gray-100 dark:bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
               </div>
-              <h3 className="text-xl font-bold mb-2">
-                {isOwnProfile ? "No posts yet" : "No posts"}
-              </h3>
-              <p className="text-gray-500 dark:text-gray-400 mb-6">
-                {isOwnProfile ? "When you post something, it will show up here." : "When they post, it will show up here."}
-              </p>
-              {isOwnProfile && (
-                <Button
-                  onClick={() => navigate("/")}
-                  className="bg-black text-white dark:bg-white dark:text-black hover:bg-gray-900 dark:hover:bg-gray-200"
+            )}
+          </div>
+
+          <div>
+            {isOwnProfile ? (
+              <Button onClick={openEdit} className="glass-button">
+                Edit Profile
+              </Button>
+            ) : (
+              <Button 
+                onClick={toggleFollow} 
+                className={isFollowing ? "glass-button" : "glass-gradient text-white"}
+              >
+                {isFollowing ? "Following" : "Follow"}
+              </Button>
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <h1 className="text-2xl font-bold">{displayName}</h1>
+            <p className="text-gray-600 dark:text-gray-400">@{displayData?.username}</p>
+          </div>
+
+          {displayData?.bio && (
+            <p className="text-gray-700 dark:text-gray-300 glass-card p-3 rounded-lg">
+              {displayData.bio}
+            </p>
+          )}
+
+          {/* Profile Meta */}
+          <div className="flex flex-wrap gap-4 text-sm glass-card p-4 rounded-lg">
+            {displayData?.city && (
+              <span className="flex items-center gap-1">
+                <MapPin size={16} className="text-gray-500" />
+                {displayData.city}{displayData.state ? `, ${displayData.state}` : ""}
+              </span>
+            )}
+            
+            {displayData?.occupation && (
+              <span className="flex items-center gap-1">
+                <Briefcase size={16} className="text-gray-500" />
+                {displayData.occupation}
+              </span>
+            )}
+            
+            {displayData?.education && (
+              <span className="flex items-center gap-1">
+                <GraduationCap size={16} className="text-gray-500" />
+                {displayData.education}
+              </span>
+            )}
+            
+            {displayData?.website && (
+              <span className="flex items-center gap-1">
+                <LinkIcon size={16} className="text-gray-500" />
+                <a 
+                  href={displayData.website.startsWith('http') ? displayData.website : `https://${displayData.website}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 hover:underline"
                 >
-                  Create your first post
-                </Button>
-              )}
-            </div>
-          ) : (
-            <div>
-              {posts.map(post => (
-                <div key={post._id} className="border-b border-gray-200 dark:border-gray-800">
+                  {displayData.website.replace(/^https?:\/\//, '')}
+                </a>
+              </span>
+            )}
+          </div>
+
+          {/* Follow Stats */}
+          <div className="flex gap-4 text-sm glass-card p-3 rounded-lg">
+            <button 
+              onClick={() => setActiveTab("following")}
+              className={`flex-1 text-center p-2 rounded-lg transition ${
+                activeTab === "following" ? "glass-heavy" : "hover:glass"
+              }`}
+            >
+              <span className="font-bold block">{following.length}</span>
+              <span className="text-gray-600 dark:text-gray-400">Following</span>
+            </button>
+            <button 
+              onClick={() => setActiveTab("followers")}
+              className={`flex-1 text-center p-2 rounded-lg transition ${
+                activeTab === "followers" ? "glass-heavy" : "hover:glass"
+              }`}
+            >
+              <span className="font-bold block">{followers.length}</span>
+              <span className="text-gray-600 dark:text-gray-400">Followers</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex mt-6 glass-card rounded-none border-x-0">
+        {["posts", "followers", "following"].map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`flex-1 py-3 font-medium capitalize transition-all
+              ${activeTab === tab 
+                ? "glass-heavy text-gray-900 dark:text-white" 
+                : "glass-button text-gray-600 dark:text-gray-400"
+              }`}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab Content */}
+      <div className="p-4">
+        {activeTab === "posts" && (
+          <div className="space-y-4">
+            {posts.length === 0 ? (
+              <div className="text-center py-12 glass-card rounded-lg">
+                <p className="text-gray-500">No posts yet</p>
+              </div>
+            ) : (
+              posts.map(post => (
+                <div 
+                  key={post._id} 
+                  onClick={() => handlePostClick(post)}
+                  className="cursor-pointer glass-card rounded-lg overflow-hidden transition-transform hover:scale-[1.02]"
+                >
                   <PostItem
                     post={{ ...post, user: profileUser }}
-                    onLike={likePost}
-                    onComment={addComment}
-                    getComments={getComments}
+                    onLike={() => handleLike(post._id)}
+                    onComment={(text) => addComment(post._id, text)}
+                    getComments={() => getComments(post._id)}
                   />
                 </div>
-              ))}
-            </div>
-          )
+              ))
+            )}
+          </div>
         )}
 
         {activeTab === "followers" && (
-          <div className="p-4">
+          <div className="space-y-2">
             {followers.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 bg-gray-100 dark:bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Users className="w-8 h-8 text-gray-600" />
-                </div>
-                <h3 className="text-xl font-bold mb-2">No followers yet</h3>
-                <p className="text-gray-500 dark:text-gray-400">
-                  {isOwnProfile ? "When someone follows you, they'll show up here." : "No followers yet"}
-                </p>
+              <div className="text-center py-12 glass-card rounded-lg">
+                <Users className="w-12 h-12 mx-auto mb-3 text-gray-500" />
+                <p className="text-gray-500">No followers yet</p>
               </div>
             ) : (
-              <div className="space-y-3">
-                {followers.map(user => (
-                  <div 
-                    key={user._id}
-                    onClick={() => navigate(`/profile/${user._id}`)}
-                    className="flex items-center justify-between p-3 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg cursor-pointer"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Avatar fallback={user.username} src={user.avatar} size="md" />
-                      <div>
-                        <h4 className="font-medium">{user.username}</h4>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{user.bio || "No bio"}</p>
-                      </div>
-                    </div>
-                    {!isOwnProfile && (
-                      <Button size="sm" className="bg-white text-black hover:bg-gray-200 text-xs">
-                        Follow
-                      </Button>
-                    )}
+              followers.map(follower => (
+                <div
+                  key={follower._id}
+                  onClick={() => handleUserClick(follower._id)}
+                  className="flex items-center gap-3 p-3 glass-card rounded-lg cursor-pointer hover:glass-heavy transition"
+                >
+                  <Avatar
+                    fallback={follower.username}
+                    src={imageUrl(follower.avatar)}
+                    size="md"
+                  />
+                  <div className="flex-1">
+                    <h4 className="font-medium">
+                      {follower.firstName 
+                        ? `${follower.firstName} ${follower.lastName || ""}`.trim()
+                        : follower.username}
+                    </h4>
+                    <p className="text-sm text-gray-500">@{follower.username}</p>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))
             )}
           </div>
         )}
 
         {activeTab === "following" && (
-          <div className="p-4">
+          <div className="space-y-2">
             {following.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <UserPlus className="w-8 h-8 text-gray-600" />
-                </div>
-                <h3 className="text-xl font-bold text-white mb-2">Not following anyone</h3>
-                <p className="text-gray-400">
-                  {isOwnProfile ? "When you follow people, they'll show up here." : "Not following anyone yet"}
-                </p>
+              <div className="text-center py-12 glass-card rounded-lg">
+                <Users className="w-12 h-12 mx-auto mb-3 text-gray-500" />
+                <p className="text-gray-500">Not following anyone yet</p>
               </div>
             ) : (
-              <div className="space-y-3">
-                {following.map(user => (
-                  <div 
-                    key={user._id}
-                    onClick={() => navigate(`/profile/${user._id}`)}
-                    className="flex items-center justify-between p-3 hover:bg-gray-900 rounded-lg cursor-pointer"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Avatar fallback={user.username} src={user.avatar} size="md" />
-                      <div>
-                        <h4 className="font-medium text-white">{user.username}</h4>
-                        <p className="text-sm text-gray-400">{user.bio || "No bio"}</p>
-                      </div>
-                    </div>
-                    <Button size="sm" className="border border-gray-300 dark:border-gray-700 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 text-xs">
-                      Following
-                    </Button>
+              following.map(followedUser => (
+                <div
+                  key={followedUser._id}
+                  onClick={() => handleUserClick(followedUser._id)}
+                  className="flex items-center gap-3 p-3 glass-card rounded-lg cursor-pointer hover:glass-heavy transition"
+                >
+                  <Avatar
+                    fallback={followedUser.username}
+                    src={imageUrl(followedUser.avatar)}
+                    size="md"
+                  />
+                  <div className="flex-1">
+                    <h4 className="font-medium">
+                      {followedUser.firstName 
+                        ? `${followedUser.firstName} ${followedUser.lastName || ""}`.trim()
+                        : followedUser.username}
+                    </h4>
+                    <p className="text-sm text-gray-500">@{followedUser.username}</p>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))
             )}
-          </div>
-        )}
-
-        {activeTab === "likes" && (
-            <div className="text-center py-12 px-4">
-              <div className="w-16 h-16 bg-gray-100 dark:bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Heart className="w-8 h-8 text-gray-600" />
-            </div>
-              <h3 className="text-xl font-bold mb-2">No likes yet</h3>
-              <p className="text-gray-500 dark:text-gray-400">
-              {isOwnProfile ? "Posts you've liked will appear here." : "Liked posts will appear here."}
-            </p>
           </div>
         )}
       </div>
 
-      {/* EDIT MODAL */}
+      {/* Edit Profile Modal */}
       {isEditing && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-gray-900 rounded-lg w-full max-w-md border border-gray-200 dark:border-gray-800">
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800">
-              <h2 className="text-lg font-bold">Edit Profile</h2>
-              <button onClick={() => !uploading && setIsEditing(false)} className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsEditing(false)} />
+          <div className="relative w-full max-w-lg glass-panel rounded-xl max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 glass-heavy p-4 border-b border-white/20 dark:border-white/5 flex justify-between items-center">
+              <h3 className="text-lg font-bold">Edit Profile</h3>
+              <button 
+                onClick={() => setIsEditing(false)}
+                className="p-1 glass-button rounded-full"
+              >
                 <X size={20} />
               </button>
             </div>
 
-            <div className="p-4 space-y-4 max-h-[60vh] overflow-y-auto">
-              {[
-                { key: "firstName", label: "First Name" },
-                { key: "lastName", label: "Last Name" },
-                { key: "phoneNo", label: "Phone" },
-                { key: "city", label: "City" },
-                { key: "state", label: "State" },
-                { key: "occupation", label: "Occupation" },
-                { key: "education", label: "Education" },
-                { key: "website", label: "Website" },
-              ].map((field) => (
-                <div key={field.key}>
-                  <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">{field.label}</label>
+            <div className="p-4 space-y-4">
+              {/* Form Fields */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm mb-1">First Name</label>
                   <input
-                    value={form[field.key]}
-                    onChange={e => setForm({ ...form, [field.key]: e.target.value })}
-                    className="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded px-3 py-2"
+                    type="text"
+                    value={form.firstName}
+                    onChange={e => setForm({ ...form, firstName: e.target.value })}
+                    className="w-full p-2 glass-input rounded-lg"
                   />
                 </div>
-              ))}
+                <div>
+                  <label className="block text-sm mb-1">Last Name</label>
+                  <input
+                    type="text"
+                    value={form.lastName}
+                    onChange={e => setForm({ ...form, lastName: e.target.value })}
+                    className="w-full p-2 glass-input rounded-lg"
+                  />
+                </div>
+              </div>
 
               <div>
-                <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">Bio</label>
+                <label className="block text-sm mb-1">Bio</label>
                 <textarea
                   value={form.bio}
                   onChange={e => setForm({ ...form, bio: e.target.value })}
-                  rows={3}
-                  className="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded px-3 py-2 resize-none"
+                  rows="3"
+                  className="w-full p-2 glass-input rounded-lg"
                 />
               </div>
 
-              <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">Profile Picture</label>
+                  <label className="block text-sm mb-1">City</label>
                   <input
-                    type="file"
-                    accept="image/*"
-                    onChange={e => e.target.files[0] && setAvatarFile(e.target.files[0])}
-                    className="w-full text-sm text-gray-500 dark:text-gray-400"
+                    type="text"
+                    value={form.city}
+                    onChange={e => setForm({ ...form, city: e.target.value })}
+                    className="w-full p-2 glass-input rounded-lg"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">Cover Photo</label>
+                  <label className="block text-sm mb-1">State</label>
                   <input
-                    type="file"
-                    accept="image/*"
-                    onChange={e => e.target.files[0] && setCoverFile(e.target.files[0])}
-                    className="w-full text-sm text-gray-500 dark:text-gray-400"
+                    type="text"
+                    value={form.state}
+                    onChange={e => setForm({ ...form, state: e.target.value })}
+                    className="w-full p-2 glass-input rounded-lg"
                   />
                 </div>
               </div>
+
+              <div>
+                <label className="block text-sm mb-1">Website</label>
+                <input
+                  type="url"
+                  value={form.website}
+                  onChange={e => setForm({ ...form, website: e.target.value })}
+                  className="w-full p-2 glass-input rounded-lg"
+                  placeholder="https://..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm mb-1">Occupation</label>
+                <input
+                  type="text"
+                  value={form.occupation}
+                  onChange={e => setForm({ ...form, occupation: e.target.value })}
+                  className="w-full p-2 glass-input rounded-lg"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm mb-1">Education</label>
+                <input
+                  type="text"
+                  value={form.education}
+                  onChange={e => setForm({ ...form, education: e.target.value })}
+                  className="w-full p-2 glass-input rounded-lg"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm mb-1">Phone Number</label>
+                <input
+                  type="tel"
+                  value={form.phoneNo}
+                  onChange={e => setForm({ ...form, phoneNo: e.target.value })}
+                  className="w-full p-2 glass-input rounded-lg"
+                />
+              </div>
             </div>
 
-            <div className="p-4 border-t border-gray-200 dark:border-gray-800 flex justify-end gap-3">
-              <Button
-                variant="secondary"
-                onClick={() => setIsEditing(false)}
-                disabled={uploading}
-                className="border border-gray-300 dark:border-gray-700 bg-transparent"
-              >
+            <div className="sticky bottom-0 glass-heavy p-4 border-t border-white/20 dark:border-white/5 flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsEditing(false)} className="glass-button">
                 Cancel
               </Button>
-              <Button onClick={saveProfile} disabled={uploading} className="bg-black text-white dark:bg-white dark:text-black hover:bg-gray-900 dark:hover:bg-gray-200">
-                {uploading ? "Saving..." : "Save"}
+              <Button onClick={saveProfile} disabled={uploading} className="glass-gradient text-white">
+                {uploading ? (
+                  <>
+                    <Loader2 className="animate-spin mr-2" size={16} />
+                    Saving...
+                  </>
+                ) : (
+                  "Save Changes"
+                )}
               </Button>
             </div>
           </div>
         </div>
+      )}
+
+      {/* Post Modal */}
+      {isModalOpen && selectedPost && (
+        <PostModal
+          post={{ ...selectedPost, user: profileUser }}
+          onClose={handleCloseModal}
+          onLike={() => handleLike(selectedPost._id)}
+          onComment={(text) => addComment(selectedPost._id, text)}
+          getComments={() => getComments(selectedPost._id)}
+        />
       )}
     </div>
   );

@@ -69,53 +69,54 @@ const PostItem = ({ post, onLike, onComment, getComments }) => {
   };
 
   return (
-    <article className="border-b border-gray-800">
+    <article className="w-full glass-card rounded-lg overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between p-4">
+      <div className="flex flex-wrap items-center justify-between p-4 gap-2 glass">
         {userId ? (
           <Link to={`/profile/${userId}`} className="flex items-center gap-3">
-            <Avatar
-              src={user.avatar}
-              fallback={user.username}
-              size="md"
-              className="border border-gray-700"
-            />
+            <div className="glass-avatar-ring rounded-full">
+              <Avatar
+                src={user.avatar}
+                fallback={user.username}
+                size="md"
+              />
+            </div>
             <div>
-              <p className="font-semibold text-sm text-white">
+              <p className="font-semibold text-sm text-gray-900 dark:text-white">
                 {user.username}
               </p>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
                 {formatTime(post.createdAt)}
               </p>
             </div>
           </Link>
         ) : (
           <div className="flex items-center gap-3">
-            <Avatar fallback="U" className="border border-gray-700" />
+            <Avatar fallback="U" />
             <span className="text-sm text-gray-400">Unknown user</span>
           </div>
         )}
 
-        <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white">
+        <Button variant="ghost" size="icon" className="glass-button">
           <MoreHorizontal size={20} />
         </Button>
       </div>
 
       {/* Image */}
       {post.imageUrl && (
-        <div className="relative aspect-square bg-black">
+        <div className="w-full bg-black/50">
           <img
             src={post.imageUrl}
             alt="Post"
-            className="w-full h-full object-cover"
+            className="w-full max-h-[600px] object-cover"
           />
         </div>
       )}
-
+      
       {/* Caption */}
       {post.caption && (
-        <div className="px-4 pt-3">
-          <p className="text-white">
+        <div className="px-4 pt-3 glass-light">
+          <p className="text-gray-900 dark:text-white">
             <span className="font-semibold mr-2">{user.username}</span>
             {post.caption}
           </p>
@@ -123,12 +124,12 @@ const PostItem = ({ post, onLike, onComment, getComments }) => {
       )}
 
       {/* Actions */}
-      <div className="p-4">
+      <div className="p-4 glass">
         <div className="flex items-center gap-4 mb-3">
           <button
             onClick={handleLike}
-            className={`p-1 ${
-              post.isLiked ? "text-red-500" : "text-gray-400 hover:text-white"
+            className={`p-1 transition ${
+              post.isLiked ? "text-red-500" : "text-gray-500 hover:text-red-500"
             }`}
           >
             <Heart size={24} fill={post.isLiked ? "currentColor" : "none"} />
@@ -136,40 +137,40 @@ const PostItem = ({ post, onLike, onComment, getComments }) => {
 
           <button
             onClick={loadComments}
-            className="p-1 text-gray-400 hover:text-white"
+            className="p-1 text-gray-500 hover:text-blue-500 transition"
           >
             <MessageCircle size={24} />
           </button>
 
-          <button className="p-1 text-gray-400 hover:text-white">
+          <button className="p-1 text-gray-500 hover:text-green-500 transition">
             <Send size={24} />
           </button>
         </div>
 
-        <p className="font-semibold text-sm text-gray-300 mb-2">
+        <p className="font-semibold text-sm text-gray-700 dark:text-gray-300 mb-2">
           {(post.likeCount ?? 0).toLocaleString()} likes
         </p>
 
         {commentCount > 0 && (
           <button
             onClick={loadComments}
-            className="text-sm text-gray-400 mb-3 hover:text-white"
+            className="text-sm text-gray-500 mb-3 hover:text-gray-700 dark:hover:text-gray-300 transition"
           >
             {loadingComments ? "Loading..." : `View ${commentCount} comments`}
           </button>
         )}
 
         {commentsOpen && (
-          <div className="space-y-2 mb-3 max-h-60 overflow-y-auto">
+          <div className="space-y-2 mb-3 max-h-60 overflow-y-auto glass-light p-3 rounded-lg">
             {comments.map((c) => (
               <div
                 key={c._id || `${c.user?._id}-${c.createdAt}`}
                 className="flex gap-2 text-sm"
               >
-                <span className="font-semibold text-white">
+                <span className="font-semibold text-gray-900 dark:text-white">
                   {c.user?.username}
                 </span>
-                <span className="text-gray-300">{c.text}</span>
+                <span className="text-gray-600 dark:text-gray-300">{c.text}</span>
               </div>
             ))}
           </div>
@@ -178,21 +179,21 @@ const PostItem = ({ post, onLike, onComment, getComments }) => {
         {/* Add comment */}
         <form
           onSubmit={submitComment}
-          className="flex items-center gap-2 border-t border-gray-800 pt-3"
+          className="flex items-center gap-2 pt-3"
         >
           <Input
             type="text"
             placeholder="Add a comment..."
             value={commentText}
             onChange={(e) => setCommentText(e.target.value)}
-            className="flex-1 text-sm bg-transparent border-gray-800 text-white placeholder-gray-500"
+            className="flex-1 text-sm glass-input"
           />
           {commentText.trim() && (
             <Button
               type="submit"
               variant="ghost"
               size="sm"
-              className="text-white hover:bg-gray-800"
+              className="glass-button"
             >
               Post
             </Button>

@@ -1,24 +1,23 @@
 import React from "react";
 
-const Switch = ({ checked, onChange, disabled = false, className = "" }) => {
+const Switch = ({ checked, onChange, disabled = false }) => {
   return (
     <button
       type="button"
       role="switch"
       aria-checked={checked}
-      onClick={onChange}
       disabled={disabled}
+      onClick={onChange}
       className={`
-        relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2
-        ${checked ? "bg-blue-600" : "bg-gray-200"}
-        ${disabled ? "opacity-50 cursor-not-allowed" : ""}
-        ${className}
+        relative inline-flex h-6 w-11 items-center rounded-full transition-colors
+        ${checked ? 'bg-black dark:bg-white' : 'bg-gray-300 dark:bg-gray-700'}
+        ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
       `}
     >
       <span
         className={`
-          pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out
-          ${checked ? "translate-x-5" : "translate-x-0"}
+          inline-block h-4 w-4 transform rounded-full bg-white dark:bg-black transition-transform
+          ${checked ? 'translate-x-6' : 'translate-x-1'}
         `}
       />
     </button>

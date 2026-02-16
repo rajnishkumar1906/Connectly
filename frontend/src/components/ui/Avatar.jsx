@@ -1,35 +1,42 @@
 import React from "react";
 
-const Avatar = ({ src, alt, fallback, size = "md", className = "" }) => {
-  const sizes = {
-    xs: "h-6 w-6 text-[10px]",
-    sm: "h-8 w-8 text-xs",
-    md: "h-10 w-10 text-sm",
-    lg: "h-12 w-12 text-base",
-    xl: "h-20 w-20 text-xl",
-    full: "h-full w-full",
+const Avatar = ({ src, fallback, size = "md", className = "" }) => {
+  const [error, setError] = React.useState(false);
+
+  const sizeClasses = {
+    sm: "w-8 h-8 text-xs",
+    md: "w-10 h-10 text-sm",
+    lg: "w-12 h-12 text-base",
+    xl: "w-16 h-16 text-lg",
+    full: "w-full h-full"
   };
 
-  const getFallbackUrl = (name) => {
-    return `https://ui-avatars.com/api/?name=${encodeURIComponent(
-      name || "U"
-    )}&background=3B82F6&color=fff&size=128`;
+  const getInitials = () => {
+    if (!fallback) return "?";
+    return fallback.charAt(0).toUpperCase();
   };
-
-  const imageSrc = src || getFallbackUrl(fallback);
 
   return (
     <div
-      className={`relative inline-block rounded-full overflow-hidden bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 ${sizes[size]} ${className}`}
+      className={`
+        ${sizeClasses[size] || sizeClasses.md}
+        rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700
+        flex items-center justify-center font-semibold
+        ${className}
+      `}
     >
-      <img
-        src={imageSrc}
-        alt={alt || fallback || "Avatar"}
-        className="h-full w-full object-cover"
-        onError={(e) => {
-          e.currentTarget.src = getFallbackUrl(fallback);
-        }}
-      />
+      {src && !error ? (
+        <img
+          src={src}
+          alt={fallback}
+          className="w-full h-full object-cover"
+          onError={() => setError(true)}
+        />
+      ) : (
+        <span className="text-gray-600 dark:text-gray-300">
+          {getInitials()}
+        </span>
+      )}
     </div>
   );
 };

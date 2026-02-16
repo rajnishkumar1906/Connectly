@@ -5,7 +5,7 @@ import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 
 const Login = () => {
-  const { login, signup, loading = false, isAuthorised } = useContext(AppContext);
+  const { login, signup, loading = false, isAuthorised, theme } = useContext(AppContext);
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from || "/";
@@ -45,26 +45,39 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden">
+      {/* Background Image with Overlay */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: theme === 'dark' 
+            ? 'url(/login-bg-dark.jpg)' 
+            : 'url(/login-bg-light.jpg)',
+        }}
+      />
+      
+      {/* Soft overlay for better contrast */}
+      <div className="absolute inset-0 bg-white/30 dark:bg-black/40 backdrop-blur-[2px]" />
 
-        {/* Logo */}
-        <div className="flex justify-center mb-8">
-          <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center">
-            <span className="text-black text-2xl font-bold">C</span>
+      {/* Login Container with margins */}
+      <div className="relative w-full max-w-md mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="glass-panel rounded-2xl p-6 sm:p-8">
+          {/* Logo */}
+          <div className="flex justify-center mb-6">
+            <div className="w-14 h-14 bg-black dark:bg-white rounded-xl flex items-center justify-center shadow-lg">
+              <span className="text-white dark:text-black text-2xl font-bold">C</span>
+            </div>
           </div>
-        </div>
 
-        {/* Form */}
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-8">
-          <h1 className="text-2xl font-bold text-center mb-2">
-            {isSignUp ? "Join Connectly" : "Welcome back"}
+          {/* Title */}
+          <h1 className="text-2xl font-bold text-center text-gray-900 dark:text-white mb-2">
+            {isSignUp ? "Create Account" : "Welcome Back"}
           </h1>
-
-          <p className="text-gray-400 text-center mb-6">
-            {isSignUp ? "Create your account" : "Sign in to continue"}
+          <p className="text-gray-600 dark:text-gray-300 text-center mb-8">
+            {isSignUp ? "Sign up to join Connectly" : "Sign in to continue"}
           </p>
 
+          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
               <Input
@@ -73,7 +86,7 @@ const Login = () => {
                 value={formData.username}
                 onChange={handleChange}
                 required
-                className='bg-white text-gray-900 placeholder-gray-400'
+                className="glass-input w-full px-4 py-3 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
               />
             )}
 
@@ -84,7 +97,7 @@ const Login = () => {
               value={formData.email}
               onChange={handleChange}
               required
-              className='text-black-900'
+              className="glass-input w-full px-4 py-3 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
             />
 
             <Input
@@ -94,29 +107,61 @@ const Login = () => {
               value={formData.password}
               onChange={handleChange}
               required
+              className="glass-input w-full px-4 py-3 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
             />
 
-            {/* FIXED BUTTON */}
+            {/* Remember me & Forgot password */}
+            {!isSignUp && (
+              <div className="flex items-center justify-between text-sm">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-black dark:text-white bg-transparent"
+                  />
+                  <span className="text-gray-700 dark:text-gray-300">Remember me</span>
+                </label>
+                <button
+                  type="button"
+                  className="text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition"
+                >
+                  Forgot password?
+                </button>
+              </div>
+            )}
+
             <Button
               type="submit"
-              className="w-full bg-white !text-black py-2 rounded-lg hover:bg-gray-200"
               disabled={loading}
+              className="w-full bg-black text-white dark:bg-white dark:text-black py-3 rounded-xl font-medium hover:opacity-90 transition-all"
             >
-              {loading ? "Loading..." : isSignUp ? "Sign Up" : "Log In"}
+              {loading ? (
+                <div className="w-5 h-5 border-2 border-white dark:border-black border-t-transparent rounded-full animate-spin mx-auto" />
+              ) : (
+                isSignUp ? "Sign Up" : "Log In"
+              )}
             </Button>
           </form>
 
-          <p className="text-center text-gray-400 mt-6">
-            {isSignUp ? "Already have an account?" : "New here?"}{" "}
+          {/* Toggle between login/signup */}
+          <p className="text-center text-gray-600 dark:text-gray-400 mt-6">
+            {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
             <button
               type="button"
               onClick={() => setIsSignUp(!isSignUp)}
-              className="text-white font-semibold hover:underline"
+              className="text-black dark:text-white font-semibold hover:underline"
             >
               {isSignUp ? "Log in" : "Sign up"}
             </button>
           </p>
         </div>
+
+        {/* Terms */}
+        <p className="text-xs text-center text-gray-600 dark:text-gray-400 mt-6">
+          By continuing, you agree to our{" "}
+          <button className="text-gray-900 dark:text-white hover:underline">Terms</button>
+          {" "}and{" "}
+          <button className="text-gray-900 dark:text-white hover:underline">Privacy Policy</button>
+        </p>
       </div>
     </div>
   );

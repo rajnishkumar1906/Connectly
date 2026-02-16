@@ -1,123 +1,93 @@
-import React, { useContext, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import { UserPlus, Users } from "lucide-react";
 import { AppContext } from "../context/AppContext";
 import Avatar from "./ui/Avatar";
 import Button from "./ui/Button";
 
 const Recommends = () => {
-  const {
-    user,
-    recommendedUsers,
-    fetchRecommendedUsers,
-    followUser,
-    isAuthorised,
-  } = useContext(AppContext);
+  const { recommendedUsers, followUser, isAuthorised } = useContext(AppContext);
+  const navigate = useNavigate();
 
-  const [loadingId, setLoadingId] = useState(null);
+  if (!isAuthorised) return null;
 
-  useEffect(() => {
-    if (isAuthorised) fetchRecommendedUsers();
-  }, [isAuthorised, fetchRecommendedUsers]);
-
-  const handleFollow = async (userId) => {
-    if (!userId || loadingId) return;
-    setLoadingId(userId);
+  const handleFollow = async (userId, e) => {
+    e.stopPropagation();
     await followUser(userId);
-    setLoadingId(null);
+  };
+
+  const handleUserClick = (userId) => {
+    navigate(`/profile/${userId}`);
+  };
+
+  const handleViewAll = () => {
+    navigate('/discover');
   };
 
   return (
-    <aside className="hidden lg:flex w-80 flex-shrink-0 h-screen bg-white text-gray-900 dark:bg-black dark:text-white border-l border-gray-200 dark:border-gray-800 flex-col overflow-y-auto sticky top-0">
-      {/* Search Bar */}
-      <div className="p-4 border-b border-gray-800">
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Search"
-            className="w-full bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-full px-4 py-2.5 text-sm placeholder-gray-500 focus:outline-none focus:border-gray-600"
-          />
+    <div className="p-4">
+      <h2 className="font-semibold text-lg mb-4">Suggested for you</h2>
+      
+      {recommendedUsers.length === 0 ? (
+        <div className="text-center py-8">
+          <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-3">
+            <Users className="w-6 h-6 text-gray-500" />
+          </div>
+          <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
+            No suggestions yet
+          </p>
+          <Button 
+            onClick={handleViewAll}
+            size="sm"
+            className="bg-black text-white dark:bg-white dark:text-black"
+          >
+            Discover People
+          </Button>
         </div>
-      </div>
-
-      {/* Trending */}
-      <div className="p-4 border-b border-gray-800">
-        <h2 className="text-lg font-bold text-white mb-4">Trending Now</h2>
-        <div className="space-y-4">
-          {[
-            { tag: "#WebDev", posts: "45.2K" },
-            { tag: "#Design", posts: "32.1K" },
-            { tag: "#Tech", posts: "28.7K" },
-            { tag: "#Startup", posts: "21.4K" },
-          ].map((trend, index) => (
-            <div key={trend.tag} className="p-3 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg cursor-pointer">
-              <div className="text-sm text-gray-500 dark:text-gray-400">Trending</div>
-              <div className="font-bold">{trend.tag}</div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">{trend.posts} posts</div>
+      ) : (
+        <div className="space-y-3">
+          {recommendedUsers.slice(0, 5).map((user) => (
+            <div
+              key={user._id}
+              onClick={() => handleUserClick(user._id)}
+              className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+            >
+              <Avatar
+                src={user.avatar}
+                fallback={user.username}
+                size="md"
+              />
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm text-gray-900 dark:text-white truncate">
+                  {user.username}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {user.followersCount || 0} followers
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={(e) => handleFollow(user._id, e)}
+                className="border-gray-300 dark:border-gray-600"
+              >
+                <UserPlus size={14} className="mr-1" />
+                Follow
+              </Button>
             </div>
           ))}
-        </div>
-      </div>
-
-      {/* Who to Follow */}
-      <div className="p-4">
-        <h2 className="text-lg font-bold mb-4">Who to follow</h2>
-        <div className="space-y-4">
-          {recommendedUsers.length === 0 ? (
-            <div className="text-center py-4">
-              <p className="text-gray-500 dark:text-gray-400">No suggestions</p>
-            </div>
-          ) : (
-            recommendedUsers.map((u) => (
-              <div key={u._id} className="flex items-center justify-between p-2 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg">
-                <Link
-                  to={`/profile/${u._id}`}
-                  className="flex items-center gap-3 flex-1 min-w-0"
-                >
-                  <Avatar
-                    src={u.avatar}
-                    fallback={u.username}
-                    size="md"
-                    className="border border-gray-300 dark:border-gray-700"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <h3 className="font-semibold text-sm truncate">
-                      {u.username}
-                    </h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                      Suggested for you
-                    </p>
-                  </div>
-                </Link>
-
-                <button
-                  className={`px-3 py-1.5 text-sm font-medium rounded-full ${loadingId === u._id
-                      ? "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
-                      : "bg-black text-white dark:bg-white dark:text-black hover:bg-gray-900 dark:hover:bg-gray-200"
-                    }`}
-                  disabled={loadingId === u._id}
-                  onClick={() => handleFollow(u._id)}
-                >
-                  {loadingId === u._id ? "..." : "Follow"}
-                </button>
-              </div>
-            ))
+          
+          {recommendedUsers.length > 5 && (
+            <button 
+              onClick={handleViewAll}
+              className="w-full text-sm text-blue-500 hover:text-blue-600 py-2 transition"
+            >
+              View all suggestions
+            </button>
           )}
         </div>
-      </div>
-
-      {/* Footer */}
-      <div className="p-4 border-t border-gray-800 mt-auto">
-        <div className="text-xs text-gray-500 space-y-2">
-          <div className="flex flex-wrap gap-2">
-            <a href="#" className="hover:text-gray-700 dark:hover:text-gray-400">Terms</a>
-            <a href="#" className="hover:text-gray-700 dark:hover:text-gray-400">Privacy</a>
-            <a href="#" className="hover:text-gray-700 dark:hover:text-gray-400">Cookies</a>
-            <a href="#" className="hover:text-gray-700 dark:hover:text-gray-400">Accessibility</a>
-          </div>
-          <div className="text-gray-600 dark:text-gray-500">© 2024 Connectly</div>
-        </div>
-      </div>
-    </aside>
+      )}
+    </div>
   );
 };
 

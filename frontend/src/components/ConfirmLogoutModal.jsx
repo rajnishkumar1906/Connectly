@@ -6,13 +6,11 @@ const ConfirmLogoutModal = ({ isOpen, onClose, onConfirm }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center animate-fade-in">
-      {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      {/* Card */}
       <div className="relative bg-white dark:bg-gray-900 rounded-xl shadow-2xl w-full max-w-sm p-6 z-10">
         <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
           Log out?

@@ -35,7 +35,7 @@ app.set("trust proxy", 1);
 const allowedOrigins = [
   "http://localhost:5173",
   "http://127.0.0.1:5173",
-  ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(",").map((u) => u.trim()).filter(Boolean) : []),
+  process.env.FRONTEND_URL,
 ];
 
 app.use(
@@ -83,11 +83,9 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: allowedOrigins.length ? allowedOrigins : true,
+    origin: allowedOrigins,
     credentials: true,
-    methods: ["GET", "POST"],
   },
-  transports: ["polling", "websocket"],
 });
 
 chatSocket(io);

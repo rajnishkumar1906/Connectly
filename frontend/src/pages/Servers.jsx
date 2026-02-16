@@ -6,7 +6,6 @@ import Input from "../components/ui/Input";
 import Avatar from "../components/ui/Avatar";
 import { Hash, Plus, Send, Users, ChevronLeft } from "lucide-react";
 
-/* Communities (servers) – same layout as rest of site, inside main content area */
 const Servers = () => {
   const { serverId, channelId } = useParams();
   const navigate = useNavigate();
@@ -29,6 +28,7 @@ const Servers = () => {
     leaveChannelRoom,
     appendChannelMessage,
     socket,
+    fetchServerMembers,
     isAuthorised,
   } = useContext(AppContext);
 
@@ -37,6 +37,7 @@ const Servers = () => {
   const [creating, setCreating] = useState(false);
   const [messageInput, setMessageInput] = useState("");
   const messagesEndRef = useRef(null);
+  const [members, setMembers] = useState([]);
 
   useEffect(() => {
     if (isAuthorised) fetchMyServers();
@@ -53,15 +54,11 @@ const Servers = () => {
     if (server) {
       setCurrentServer(server);
       fetchChannels(server._id);
-    } else if (myServers.length > 0) {
-      setCurrentServer(null);
-      setCurrentChannel(null);
     }
   }, [serverId, myServers]);
 
   useEffect(() => {
     if (!serverId || !channelId || channels.length === 0) {
-      if (!channelId && currentChannel) setCurrentChannel(null);
       return;
     }
     const channel = channels.find((ch) => ch._id === channelId);
@@ -94,6 +91,18 @@ const Servers = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [channelMessages]);
 
+  useEffect(() => {
+    const loadMembers = async () => {
+      if (!currentServer?._id) {
+        setMembers([]);
+        return;
+      }
+      const m = await fetchServerMembers(currentServer._id);
+      setMembers(m);
+    };
+    loadMembers();
+  }, [currentServer?._id, fetchServerMembers]);
+
   const handleCreateServer = async (e) => {
     e.preventDefault();
     if (!createName.trim()) return;
@@ -120,10 +129,8 @@ const Servers = () => {
     setMessageInput("");
   };
 
-  const goToServer = (s) => navigate(`/servers/${s._id}`);
   const goToChannel = (ch) => serverId && navigate(`/servers/${serverId}/${ch._id}`);
 
-  /* ----- List view: your communities ----- */
   if (!serverId) {
     return (
       <div className="min-h-full bg-white dark:bg-black text-gray-900 dark:text-white">
@@ -160,7 +167,7 @@ const Servers = () => {
           {myServers.length === 0 && (
             <div className="text-center py-12 border border-gray-200 dark:border-gray-800 rounded-xl">
               <Users className="w-12 h-12 mx-auto text-gray-400 dark:text-gray-500 mb-4" />
-              <p className="text-gray-500 dark:text-gray-400 mb-4">You haven’t joined any communities yet.</p>
+              <p className="text-gray-500 dark:text-gray-400 mb-4">You haven't joined any communities yet.</p>
               <Button onClick={() => setShowCreate(true)}>Create your first community</Button>
             </div>
           )}
@@ -193,10 +200,8 @@ const Servers = () => {
     );
   }
 
-  /* ----- Server open: channels + chat ----- */
   return (
     <div className="min-h-full flex flex-col bg-white dark:bg-black text-gray-900 dark:text-white">
-      {/* Top bar: back + server name */}
       <div className="shrink-0 flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-800">
         <Link to="/servers" className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
           <ChevronLeft className="w-5 h-5" />
@@ -205,7 +210,6 @@ const Servers = () => {
       </div>
 
       <div className="flex-1 flex min-h-0">
-        {/* Channel list */}
         <div className="w-52 shrink-0 border-r border-gray-200 dark:border-gray-800 flex flex-col py-3">
           <p className="px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-2">Channels</p>
           {channels.filter((ch) => ch.type === "text").map((ch) => (
@@ -224,7 +228,6 @@ const Servers = () => {
           ))}
         </div>
 
-        {/* Channel chat or placeholder */}
         {currentChannel ? (
           <div className="flex-1 flex flex-col min-w-0">
             <div className="shrink-0 px-4 py-2 border-b border-gray-200 dark:border-gray-800 flex items-center gap-2">
@@ -266,30 +269,6 @@ const Servers = () => {
           </div>
         )}
       </div>
-
-      {showCreate && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowCreate(false)}>
-          <div
-            className="bg-white dark:bg-gray-900 rounded-xl shadow-xl max-w-sm w-full p-6 border border-gray-200 dark:border-gray-800"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="text-lg font-semibold mb-4">Create community</h3>
-            <form onSubmit={handleCreateServer}>
-              <Input
-                value={createName}
-                onChange={(e) => setCreateName(e.target.value)}
-                placeholder="Community name"
-                className="mb-4"
-                autoFocus
-              />
-              <div className="flex gap-2 justify-end">
-                <Button type="button" variant="ghost" onClick={() => setShowCreate(false)}>Cancel</Button>
-                <Button type="submit" disabled={creating || !createName.trim()}>{creating ? "Creating…" : "Create"}</Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
